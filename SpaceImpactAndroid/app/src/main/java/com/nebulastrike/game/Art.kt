@@ -48,7 +48,11 @@ object Art {
     }
 
     // ---------------- player (faces up) ----------------
-    fun drawPlayer(c: Canvas, x: Float, y: Float, s: Float, t: Long, blink: Boolean) {
+    fun drawPlayer(c: Canvas, x: Float, y: Float, s: Float, t: Long, blink: Boolean, shipIdx: Int = 0) {
+        PlayerShipRenderer.drawShip(c, shipIdx, x, y, s, t, blink)
+        return
+    }
+    fun drawPlayerLegacy(c: Canvas, x: Float, y: Float, s: Float, t: Long, blink: Boolean) {
         if (blink && (t / 80) % 2L == 0L) return
         // engine flame (2-frame)
         val f = if ((t / 90) % 2L == 0L) 1f else 0.6f

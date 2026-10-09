@@ -20,4 +20,14 @@ class Save(context: Context) {
     fun setFx(v: Boolean) {
         p.edit().putBoolean("fx", v).apply()
     }
+
+    fun shipIndex(): Int = p.getInt("ship_idx", 0).coerceIn(0, 99)
+    fun setShipIndex(idx: Int) {
+        p.edit().putInt("ship_idx", idx.coerceIn(0, 99)).apply()
+    }
+
+    fun coins(): Int = p.getInt("coins", 50000) // generous starting bank
+    fun addCoins(amount: Int) {
+        p.edit().putInt("coins", (coins() + amount).coerceAtLeast(0)).apply()
+    }
 }

@@ -166,6 +166,15 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                         sound.click()
                         return true
                     }
+                    if (state == State.TITLE && e.actionMasked == MotionEvent.ACTION_DOWN && y > height * 0.40f && y < height * 0.58f) {
+                        if (x < width * 0.4f) {
+                            save.setShipIndex((save.shipIndex() - 1 + 100) % 100)
+                        } else {
+                            save.setShipIndex((save.shipIndex() + 1) % 100)
+                        }
+                        sound.click()
+                        return true
+                    }
                     pressFire()
                     return true
                 }
@@ -347,6 +356,16 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         txt.color = GRAY
         c.drawText("SND " + if (save.snd()) "ON" else "OFF", w * 0.25f, h - 40f, txt)
         c.drawText("FX " + if (save.fx()) "ON" else "OFF", w * 0.75f, h - 40f, txt)
+
+        // Hangar Ship Selector
+        val curShip = ALL_100_PLAYER_SHIPS[save.shipIndex()]
+        txt.textSize = 18f * resources.displayMetrics.scaledDensity / 2.2f
+        txt.color = WHITE
+        centerText(c, "<  SHIP #${curShip.num}: ${curShip.name.uppercase()}  >", w / 2f, h * 0.50f, 20f)
+        txt.textSize = 14f * resources.displayMetrics.scaledDensity / 2.2f
+        txt.color = GRAY
+        centerText(c, "SKILL: [${curShip.skill.uppercase()}]  HP: ${curShip.health}  SPD: ${curShip.speed}", w / 2f, h * 0.54f, 15f)
+        Art.drawPlayer(c, w / 2f, h * 0.44f, 38f, t, false, save.shipIndex())
     }
 
     private fun drawStars(c: Canvas, w: Float, h: Float) {
@@ -397,7 +416,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         }
         val p = wd.player
         if (!p.dead && state == State.PLAY) {
-            Art.drawPlayer(c, p.x, p.y, 30f, t, p.invuln > 0)
+            Art.drawPlayer(c, p.x, p.y, 30f, t, p.invuln > 0, save.shipIndex())
         }
         for (pt in wd.parts) {
             fill.color = WHITE
