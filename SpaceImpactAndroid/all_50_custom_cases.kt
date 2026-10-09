@@ -1,387 +1,3 @@
-package com.nebulastrike.game
-
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.PI
-
-const val WHITE = 0xFFFFFFFF.toInt()
-const val GRAY = 0xFF9AA0A6.toInt()
-const val DIM = 0xFF555555.toInt()
-const val DARK = 0xFF222222.toInt()
-const val BLACK = 0xFF000000.toInt()
-
-// AI family ids live in World.kt (shared); powerup ids below
-
-// powerup ids
-const val P_RAPID = 0
-const val P_DOUBLE = 1
-const val P_SPREAD = 2
-const val P_PIERCE = 3
-const val P_HEART = 4
-
-/** Strict black/white pixel sprites, portrait orientation. No color, no gradients. */
-object Art {
-    val fill = Paint().apply { isAntiAlias = false }
-    val stroke = Paint().apply {
-        isAntiAlias = false
-        style = Paint.Style.STROKE
-    }
-    private val path = Path()
-
-    private fun rect(c: Canvas, x: Float, y: Float, w: Float, h: Float, color: Int) {
-        fill.color = color
-        c.drawRect(x, y, x + w, y + h, fill)
-    }
-
-    private fun circle(c: Canvas, x: Float, y: Float, r: Float, color: Int) {
-        fill.color = color
-        c.drawCircle(x, y, r, fill)
-    }
-
-    private fun ring(c: Canvas, x: Float, y: Float, r: Float, w: Float, color: Int) {
-        stroke.color = color
-        stroke.strokeWidth = w
-        c.drawCircle(x, y, r, stroke)
-    }
-
-    // ---------------- player (faces up) ----------------
-    fun drawPlayer(c: Canvas, x: Float, y: Float, s: Float, t: Long, blink: Boolean) {
-        if (blink && (t / 80) % 2L == 0L) return
-        // engine flame (2-frame)
-        val f = if ((t / 90) % 2L == 0L) 1f else 0.6f
-        rect(c, x - s * 0.16f, y + s * 0.75f, s * 0.32f, s * 0.6f * f, WHITE)
-        rect(c, x - s * 0.08f, y + s * 1.05f, s * 0.16f, s * 0.4f * f, GRAY)
-        // side fins
-        path.reset()
-        path.moveTo(x - s * 0.2f, y + s * 0.5f)
-        path.lineTo(x - s * 0.75f, y + s * 1.0f)
-        path.lineTo(x - s * 0.15f, y + s * 0.8f)
-        path.close()
-        fill.color = GRAY
-        c.drawPath(path, fill)
-        path.reset()
-        path.moveTo(x + s * 0.2f, y + s * 0.5f)
-        path.lineTo(x + s * 0.75f, y + s * 1.0f)
-        path.lineTo(x + s * 0.15f, y + s * 0.8f)
-        path.close()
-        c.drawPath(path, fill)
-        // fuselage (nose up)
-        path.reset()
-        path.moveTo(x, y - s * 1.1f)
-        path.lineTo(x + s * 0.42f, y + s * 0.55f)
-        path.lineTo(x - s * 0.42f, y + s * 0.55f)
-        path.close()
-        fill.color = WHITE
-        c.drawPath(path, fill)
-        // cockpit
-        rect(c, x - s * 0.12f, y - s * 0.15f, s * 0.24f, s * 0.35f, BLACK)
-    }
-
-    // ---------------- enemies (face down), one silhouette per AI family ----------------
-            fun drawEnemy(c: Canvas, ai: Int, spec: Int, x: Float, y: Float, r: Float, t: Long, shieldUp: Boolean, flash: Boolean) {
-        val col = if (flash) BLACK else WHITE
-        val inv = if (flash) WHITE else BLACK
-        val bg = if (flash) WHITE else DARK
-        val idx = spec.coerceIn(0, 99)
-        val tier = idx / 25
-        val family = (idx % 25) % 8
-        val s = r * 0.95f
-
-        when (family) {
-            0 -> {
-                // V-Wing Faceted Interceptor
-                path.reset()
-                path.moveTo(x, y + s * 1.3f)
-                path.lineTo(x - s * 0.9f, y - s * 0.8f)
-                path.lineTo(x - s * 0.35f, y - s * 0.4f)
-                path.lineTo(x, y - s * 0.6f)
-                path.lineTo(x + s * 0.35f, y - s * 0.4f)
-                path.lineTo(x + s * 0.9f, y - s * 0.8f)
-                path.close()
-                fill.color = col
-                c.drawPath(path, fill)
-                // cockpit facet
-                path.reset()
-                path.moveTo(x, y + s * 0.5f)
-                path.lineTo(x - s * 0.25f, y - s * 0.3f)
-                path.lineTo(x + s * 0.25f, y - s * 0.3f)
-                path.close()
-                fill.color = inv
-                c.drawPath(path, fill)
-                if (tier >= 2) {
-                    stroke.color = col; stroke.strokeWidth = 2f
-                    c.drawLine(x - s * 0.9f, y - s * 0.8f, x - s * 1.1f, y - s * 0.2f, stroke)
-                    c.drawLine(x + s * 0.9f, y - s * 0.8f, x + s * 1.1f, y - s * 0.2f, stroke)
-                }
-            }
-            1 -> {
-                // Swept Diamond Razorback
-                path.reset()
-                path.moveTo(x, y + s * 1.2f)
-                path.lineTo(x + s * 0.75f, y)
-                path.lineTo(x, y - s * 1.1f)
-                path.lineTo(x - s * 0.75f, y)
-                path.close()
-                fill.color = bg
-                c.drawPath(path, fill)
-                stroke.color = col; stroke.strokeWidth = 2f
-                c.drawPath(path, stroke)
-                c.drawLine(x, y - s * 1.1f, x, y + s * 1.2f, stroke)
-                path.reset()
-                path.moveTo(x, y + s * 0.4f)
-                path.lineTo(x + s * 0.3f, y)
-                path.lineTo(x, y - s * 0.4f)
-                path.lineTo(x - s * 0.3f, y)
-                path.close()
-                fill.color = col
-                c.drawPath(path, fill)
-                circle(c, x, y, 3f, inv)
-            }
-            2 -> {
-                // Twin Forward Sponsons Gunship
-                rect(c, x - s * 0.45f, y - s * 0.7f, s * 0.9f, s * 1.3f, col)
-                rect(c, x - s * 0.25f, y - s * 0.4f, s * 0.5f, s * 0.7f, inv)
-                rect(c, x - s * 0.85f, y - s * 0.5f, s * 0.35f, s * 1.6f, col)
-                rect(c, x + s * 0.5f, y - s * 0.5f, s * 0.35f, s * 1.6f, col)
-                if (tier >= 1) {
-                    rect(c, x - s * 0.15f, y + s * 0.6f, s * 0.3f, s * 0.7f, col)
-                }
-            }
-            3 -> {
-                // Needle Lance Void Dart
-                path.reset()
-                path.moveTo(x, y + s * 1.5f)
-                path.lineTo(x - s * 0.4f, y - s * 0.9f)
-                path.lineTo(x, y - s * 0.6f)
-                path.lineTo(x + s * 0.4f, y - s * 0.9f)
-                path.close()
-                fill.color = col
-                c.drawPath(path, fill)
-                stroke.color = col; stroke.strokeWidth = 2f
-                c.drawLine(x - s * 0.75f, y - s * 0.2f, x + s * 0.75f, y - s * 0.2f, stroke)
-                rect(c, x - 2f, y - s * 0.3f, 4f, s * 0.7f, inv)
-            }
-            4 -> {
-                // Armored Hex-Corsair
-                path.reset()
-                for (i in 0 until 6) {
-                    val a = i * PI / 3.0
-                    val px = x + (cos(a) * s * 0.9f).toFloat()
-                    val py = y + (sin(a) * s * 0.9f).toFloat()
-                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-                }
-                path.close()
-                fill.color = bg
-                c.drawPath(path, fill)
-                stroke.color = col; stroke.strokeWidth = 2f
-                c.drawPath(path, stroke)
-                circle(c, x, y, s * 0.35f, col)
-                circle(c, x, y, 4f, inv)
-                if (tier >= 1) {
-                    c.drawLine(x - s * 0.9f, y, x - s * 1.2f, y + s * 0.5f, stroke)
-                    c.drawLine(x + s * 0.9f, y, x + s * 1.2f, y + s * 0.5f, stroke)
-                }
-            }
-            5 -> {
-                // Sacred Prism
-                path.reset()
-                path.moveTo(x, y + s * 1.1f)
-                path.lineTo(x - s * 0.85f, y - s * 0.9f)
-                path.lineTo(x + s * 0.85f, y - s * 0.9f)
-                path.close()
-                fill.color = col
-                c.drawPath(path, fill)
-                path.reset()
-                path.moveTo(x, y + s * 0.4f)
-                path.lineTo(x - s * 0.4f, y - s * 0.6f)
-                path.lineTo(x + s * 0.4f, y - s * 0.6f)
-                path.close()
-                fill.color = inv
-                c.drawPath(path, fill)
-                circle(c, x, y, 3f, col)
-            }
-            6 -> {
-                // Dual Nacelle Cruiser
-                for (k in floatArrayOf(-s * 0.45f, s * 0.45f)) {
-                    path.reset()
-                    path.moveTo(x + k, y + s * 1.2f)
-                    path.lineTo(x + k - s * 0.3f, y - s * 0.8f)
-                    path.lineTo(x + k + s * 0.3f, y - s * 0.8f)
-                    path.close()
-                    fill.color = col
-                    c.drawPath(path, fill)
-                    circle(c, x + k, y, 3f, inv)
-                }
-                rect(c, x - s * 0.3f, y - s * 0.3f, s * 0.6f, s * 0.4f, col)
-            }
-            else -> {
-                // Cruciform Dread Drone
-                rect(c, x - s * 0.8f, y - s * 0.2f, s * 1.6f, s * 0.4f, col)
-                rect(c, x - s * 0.2f, y - s * 0.9f, s * 0.4f, s * 2.0f, col)
-                circle(c, x, y, s * 0.3f, bg)
-                stroke.color = col; stroke.strokeWidth = 2f
-                c.drawCircle(x, y, s * 0.3f, stroke)
-                circle(c, x, y, 3f, col)
-            }
-        }
-
-        if (shieldUp) {
-            rect(c, x - s * 0.9f, y + s * 0.75f, s * 1.8f, s * 0.3f, col)
-        }
-    }
-
-    fun drawShot(c: Canvas, x: Float, y: Float, big: Boolean) {
-        if (big) rect(c, x - 4f, y - 14f, 8f, 28f, WHITE)
-        else rect(c, x - 2.5f, y - 9f, 5f, 18f, WHITE)
-    }
-
-    fun drawFoeShot(c: Canvas, x: Float, y: Float, r: Float) {
-        stroke.color = WHITE
-        stroke.strokeWidth = 3f
-        c.drawRect(x - r, y - r, x + r, y + r, stroke)
-    }
-
-    // ---------------- pickups ----------------
-    private val pLetters = arrayOf("R", "2", "S", "P")
-
-    fun drawItem(c: Canvas, kind: Int, x: Float, y: Float, r: Float, t: Long, txt: Paint) {
-        if (kind == 4) {
-            // heart pickup: pixel heart + blinking box
-            if ((t / 150) % 2L == 0L) {
-                stroke.color = WHITE
-                stroke.strokeWidth = 4f
-                c.drawRect(x - r, y - r, x + r, y + r, stroke)
-            }
-            fill.color = WHITE
-            val u = r / 3f
-            c.drawRect(x - 1.5f * u, y - 0.5f * u, x + 1.5f * u, y + u, fill)
-            c.drawCircle(x - 0.75f * u, y - 0.5f * u, 0.78f * u, fill)
-            c.drawCircle(x + 0.75f * u, y - 0.5f * u, 0.78f * u, fill)
-            path.reset()
-            path.moveTo(x - 1.5f * u, y + 0.2f * u)
-            path.lineTo(x, y + 1.5f * u)
-            path.lineTo(x + 1.5f * u, y + 0.2f * u)
-            path.close()
-            c.drawPath(path, fill)
-            return
-        }
-        if ((t / 150) % 2L == 0L) {
-            stroke.color = WHITE
-            stroke.strokeWidth = 4f
-            c.drawRect(x - r, y - r, x + r, y + r, stroke)
-        } else {
-            stroke.color = GRAY
-            stroke.strokeWidth = 4f
-            c.drawRect(x - r, y - r, x + r, y + r, stroke)
-        }
-        txt.color = WHITE
-        txt.textSize = r * 1.2f
-        c.drawText(pLetters[kind % pLetters.size], x, y + r * 0.42f, txt)
-    }
-
-    // ---------------- rocks ----------------
-    fun drawRock(c: Canvas, x: Float, y: Float, r: Float, rot: Float) {
-        fill.color = DIM
-        poly(c, x, y, r, 8, rot, 0.3f)
-        fill.color = GRAY
-        poly(c, x, y, r * 0.65f, 8, rot + 0.5f, 0.3f)
-        fill.color = BLACK
-        c.drawCircle(x - r * 0.2f, y + r * 0.15f, r * 0.16f, fill)
-        c.drawCircle(x + r * 0.25f, y - r * 0.2f, r * 0.12f, fill)
-    }
-
-    private fun poly(c: Canvas, x: Float, y: Float, r: Float, n: Int, rot: Float, jag: Float) {
-        path.reset()
-        for (i in 0 until n) {
-            val a = rot + i * 2 * PI / n
-            val rr = r * (1f + jag * sin(i * 12.9898).toFloat())
-            val px = x + (cos(a) * rr).toFloat()
-            val py = y + (sin(a) * rr).toFloat()
-            if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-        }
-        path.close()
-        c.drawPath(path, fill)
-    }
-
-    // ---------------- obstacle boxes (portrait: walls span width, gaps left-right) ----------------
-    fun drawBox(c: Canvas, b: Box, w: Float, t: Long) {
-        val flash = b.flash > 0
-        val edge = if (flash) BLACK else WHITE
-        val body = if (flash) WHITE else DARK
-        when (b.kind) {
-            BOX_WALL_V, BOX_NARROW -> {
-                // horizontal wall with a left-right gap
-                val blink = !b.hot && (t / 180) % 2L == 0L
-                stroke.color = if (blink) GRAY else edge
-                stroke.strokeWidth = 7f
-                val gl = b.gapX - b.gapW / 2
-                val gr = b.gapX + b.gapW / 2
-                var xx = 0f
-                while (xx < gl) {
-                    c.drawLine(xx, b.y, minOf(xx + 30f, gl), b.y, stroke)
-                    xx += 52f
-                }
-                xx = gr
-                while (xx < w) {
-                    c.drawLine(xx, b.y, minOf(xx + 30f, w), b.y, stroke)
-                    xx += 52f
-                }
-                fill.color = edge
-                c.drawRect(0f, b.y - 26f, 30f, b.y + 26f, fill)
-                c.drawRect(w - 30f, b.y - 26f, w, b.y + 26f, fill)
-            }
-            BOX_WALL_H -> {
-                // left+right bars leaving a middle vertical lane
-                val blink = !b.hot && (t / 180) % 2L == 0L
-                fill.color = if (blink) GRAY else body
-                val bar = b.w
-                c.drawRect(0f, b.y - 190f, bar, b.y + 190f, fill)
-                c.drawRect(w - bar, b.y - 190f, w, b.y + 190f, fill)
-                stroke.color = if (blink) GRAY else edge
-                stroke.strokeWidth = 5f
-                c.drawRect(0f, b.y - 190f, bar, b.y + 190f, stroke)
-                c.drawRect(w - bar, b.y - 190f, w, b.y + 190f, stroke)
-            }
-            BOX_SPIN -> {
-                c.save()
-                c.translate(b.x, b.y)
-                c.rotate(Math.toDegrees(b.rot.toDouble()).toFloat())
-                stroke.color = edge
-                stroke.strokeWidth = 6f
-                c.drawRect(-b.r, -b.r, b.r, b.r, stroke)
-                c.restore()
-                fill.color = edge
-                c.drawCircle(b.x, b.y, 7f, fill)
-            }
-            else -> {
-                fill.color = body
-                c.drawRect(b.x - b.w / 2, b.y - b.h / 2, b.x + b.w / 2, b.y + b.h / 2, fill)
-                stroke.color = edge
-                stroke.strokeWidth = 5f
-                c.drawRect(b.x - b.w / 2, b.y - b.h / 2, b.x + b.w / 2, b.y + b.h / 2, stroke)
-                if (b.maxHp > 0) {
-                    fill.color = edge
-                    val frac = (b.hp / b.maxHp).coerceIn(0f, 1f)
-                    c.drawRect(b.x - b.w / 2 + 8f, b.y + b.h / 2 - 12f, b.x - b.w / 2 + 8f + (b.w - 16f) * frac, b.y + b.h / 2 - 5f, fill)
-                }
-            }
-        }
-    }
-
-    // ---------------- bosses (top-anchored) ----------------
-                    fun drawBoss(c: Canvas, id: String, x: Float, y: Float, w: Float, h: Float, t: Long, vuln: Boolean, flash: Boolean) {
-        val col = if (flash) BLACK else WHITE
-        val inv = if (flash) WHITE else BLACK
-        val bg = if (flash) WHITE else DIM
-        val bIdx = (id.replace("boss", "").toIntOrNull() ?: (id.hashCode() and 0x7FFFFFFF)) % 50
-        val bw = w * 0.68f
-        val bh = h * 0.52f
-
-        val lowId = id.lowercase()
-        when (lowId) {
             "prism", "0", "boss0" -> { // #1 PRISM (ID: prism)
                 path.reset()
                 path.moveTo((x).toFloat(), (y - bw * 0.48).toFloat())
@@ -470,16 +86,15 @@ object Art {
                 c.drawOval((x-bw*0.24).toFloat(), (y-bw*0.24).toFloat(), (x+bw*0.24).toFloat(), (y+bw*0.24).toFloat(), stroke)
                 c.drawOval((x-bw*0.08).toFloat(), (y-bw*0.08).toFloat(), (x+bw*0.08).toFloat(), (y+bw*0.08).toFloat(), fill.apply { color = col })
                 for (i in 0 until 8) {
-                    val a = (i * PI / 4.0).toFloat()
-                    val tx = (x + cos(a.toDouble()) * bw * 0.38f).toFloat()
-                    val ty = (y + sin(a.toDouble()) * bw * 0.38f).toFloat()
-                    path.reset()
-                    path.moveTo(tx, ty - 6f)
-                    path.lineTo(tx + 6f, ty + 6f)
-                    path.lineTo(tx - 6f, ty + 6f)
-                    path.close()
-                    c.drawPath(path, fill.apply { color = col })
-                }
+                val a = (i * PI / 4).toFloat()
+                // tx, ty = cx + math.cos(a)*s*0.38, cy + math.sin(a)*s*0.38
+                path.reset()
+                path.moveTo((tx).toFloat(), (ty - 6).toFloat())
+                path.lineTo((tx + 6).toFloat(), (ty + 6).toFloat())
+                path.lineTo((tx - 6).toFloat(), (ty + 6).toFloat())
+                path.close()
+                c.drawPath(path, fill.apply { color = col })
+            }
             }
             "sawtooth", "7", "boss7" -> { // #8 SAWTOOTH (ID: sawtooth)
                 path.reset()
@@ -754,22 +369,21 @@ object Art {
                 c.drawOval((x-bw*0.18).toFloat(), (y-bw*0.18).toFloat(), (x+bw*0.18).toFloat(), (y+bw*0.18).toFloat(), fill.apply { color = col })
                 c.drawOval((x-6).toFloat(), (y-6).toFloat(), (x+6).toFloat(), (y+6).toFloat(), fill.apply { color = inv })
                 for (i in 0 until 4) {
-                    val a = (i * PI / 2.0).toFloat()
-                    val px = (x + cos(a.toDouble()) * bw * 0.32f).toFloat()
-                    val py = (y + sin(a.toDouble()) * bw * 0.32f).toFloat()
-                    c.drawRect(px - 8f, py - 8f, px + 8f, py + 8f, fill.apply { color = bg })
-                    stroke.color = col; stroke.strokeWidth = 2f
-                    c.drawRect(px - 8f, py - 8f, px + 8f, py + 8f, stroke)
-                }
+                val a = (i * PI / 2).toFloat()
+                // px, py = cx + math.cos(a)*s*0.32, cy + math.sin(a)*s*0.32
+                c.drawRect((px-8).toFloat(), (py-8).toFloat(), (px+8).toFloat(), (py+8).toFloat(), fill.apply { color = bg })
+                stroke.color = col; stroke.strokeWidth = 2f
+                c.drawRect((px-8).toFloat(), (py-8).toFloat(), (px+8).toFloat(), (py+8).toFloat(), stroke)
+            }
             }
             "rampart", "30", "boss30" -> { // #31 RAMPART (ID: rampart)
                 c.drawRect((x-bw*0.45).toFloat(), (y-bw*0.1).toFloat(), (x+bw*0.45).toFloat(), (y+bw*0.35).toFloat(), fill.apply { color = bg })
                 stroke.color = col; stroke.strokeWidth = 3f
                 c.drawRect((x-bw*0.45).toFloat(), (y-bw*0.1).toFloat(), (x+bw*0.45).toFloat(), (y+bw*0.35).toFloat(), stroke)
                 for (i in 0 until 4) {
-                    val segX = x - bw * 0.38f + i * bw * 0.22f
-                    c.drawRect(segX, y - bw * 0.25f, segX + bw * 0.12f, y - bw * 0.1f, fill.apply { color = col })
-                }
+                val segX = (x - bw*0.38 + i * bw*0.22).toFloat()
+                c.drawRect((x).toFloat(), (y-bw*0.25).toFloat(), (x+bw*0.12).toFloat(), (y-bw*0.1).toFloat(), fill.apply { color = col })
+            }
             }
             "sentinel-core", "31", "boss31" -> { // #32 SENTINEL-CORE (ID: sentinel-core)
                 stroke.color = col; stroke.strokeWidth = 2f
@@ -858,13 +472,12 @@ object Art {
             "sentinel-nest", "39", "boss39" -> { // #40 SENTINEL-NEST (ID: sentinel-nest)
                 c.drawOval((x-bw*0.2).toFloat(), (y-bw*0.2).toFloat(), (x+bw*0.2).toFloat(), (y+bw*0.2).toFloat(), fill.apply { color = col })
                 for (i in 0 until 6) {
-                    val a = (i * PI / 3.0).toFloat()
-                    val px = (x + cos(a.toDouble()) * bw * 0.32f).toFloat()
-                    val py = (y + sin(a.toDouble()) * bw * 0.32f).toFloat()
-                    c.drawOval(px - 10f, py - 10f, px + 10f, py + 10f, fill.apply { color = bg })
-                    stroke.color = col; stroke.strokeWidth = 2f
-                    c.drawOval(px - 10f, py - 10f, px + 10f, py + 10f, stroke)
-                }
+                val a = (i * PI / 3).toFloat()
+                // px, py = cx + math.cos(a)*s*0.32, cy + math.sin(a)*s*0.32
+                c.drawOval((px-10).toFloat(), (py-10).toFloat(), (px+10).toFloat(), (py+10).toFloat(), fill.apply { color = bg })
+                stroke.color = col; stroke.strokeWidth = 2f
+                c.drawOval((px-10).toFloat(), (py-10).toFloat(), (px+10).toFloat(), (py+10).toFloat(), stroke)
+            }
             }
             "dominion", "40", "boss40" -> { // #41 DOMINION (ID: dominion)
                 stroke.color = col; stroke.strokeWidth = 3f
@@ -986,46 +599,3 @@ object Art {
                     }
                 }
             }
-            else -> {
-                // Fallback to index if passed as number or bossN
-                val fallbackIdx = (lowId.replace("boss", "").toIntOrNull() ?: 0) % 50
-                // Match fallback index
-                when (fallbackIdx) {
-                    0 -> c.drawRect(x - bw * 0.3f, y - bw * 0.3f, x + bw * 0.3f, y + bw * 0.3f, fill.apply { color = col })
-                    else -> c.drawCircle(x, y, bw * 0.3f, fill.apply { color = col })
-                }
-            }
-        }
-    }
-
-        fun drawSegment(c: Canvas, x: Float, y: Float, r: Float, head: Boolean, flash: Boolean) {
-        ring(c, x, y, r, 7f, if (flash) BLACK else WHITE)
-        if (flash) circle(c, x, y, r, WHITE)
-        if (head) {
-            rect(c, x - r * 0.5f, y + r * 0.6f, r, r * 0.5f, WHITE)
-            rect(c, x - r * 0.5f, y - r * 1.1f, r, r * 0.5f, WHITE)
-            circle(c, x, y + r * 0.2f, r * 0.22f, WHITE)
-        } else {
-            circle(c, x, y, r * 0.3f, if (flash) BLACK else GRAY)
-        }
-    }
-
-    fun drawWeak(c: Canvas, x: Float, y: Float, r: Float, t: Long) {
-        if ((t / 160) % 2L == 0L) {
-            stroke.color = WHITE
-            stroke.strokeWidth = 4f
-            val o = r * 1.5f
-            val l = r * 0.6f
-            c.drawLine(x - o, y - o, x - o + l, y - o, stroke)
-            c.drawLine(x - o, y - o, x - o, y - o + l, stroke)
-            c.drawLine(x + o, y - o, x + o - l, y - o, stroke)
-            c.drawLine(x + o, y - o, x + o, y - o + l, stroke)
-            c.drawLine(x - o, y + o, x - o + l, y + o, stroke)
-            c.drawLine(x - o, y + o, x - o, y + o - l, stroke)
-            c.drawLine(x + o, y + o, x + o - l, y + o, stroke)
-            c.drawLine(x + o, y + o, x + o, y + o - l, stroke)
-        }
-    }
-}
-
-// (box kind ids live in World.kt)

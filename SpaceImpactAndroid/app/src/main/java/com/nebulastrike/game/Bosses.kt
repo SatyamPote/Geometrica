@@ -365,40 +365,142 @@ private fun genPattern(code: Int, bb: Boss, ww: World) {
     }
 }
 
-private fun buildGenBoss(idx: Int, row: GenRow, mul: Float, w: Float, h: Float): Boss {
-    val def = BossDef("boss$idx", row.name, 1200 + idx * 120, 0.44f, 0.22f, 3.2f, 0)
+
+private fun buildCustomSkillBoss(spec: BossSpecInfo, idx: Int, mul: Float, w: Float, h: Float): Boss {
+    val def = BossDef(spec.id, spec.title, 1200 + idx * 150, 0.52f, 0.22f, 3.5f, 0)
     val b = Boss(def, mul, w, h)
     b.wPx = w * def.wFrac
     b.hPx = h * def.hFrac
     b.x = w / 2f
     b.y = -b.hPx
-    b.targetY = h * 0.2f
-    b.maxHp = row.hp * mul
+    b.targetY = h * 0.18f
+    b.maxHp = spec.baseHp * mul
     b.hp = b.maxHp
-    val pats = intArrayOf(row.p0, row.p1, row.p2)
-    for (k in 0 until row.ph) {
-        val primary = pats[k % 3]
-        val until = if (k == row.ph - 1) 0f else 1f - (k + 1).toFloat() / row.ph
-        val needParts = when {
-            row.weak == 2 -> 3
-            row.weak == 1 && k == 0 -> 2
+
+    val totalPhases = spec.phasesCount
+    for (k in 0 until totalPhases) {
+        val until = if (k == totalPhases - 1) 0f else 1f - (k + 1).toFloat() / totalPhases
+        val needParts = when (spec.skillCode) {
+            14 -> if (k == 0) 2 else 0 // prismatic key nodes
+            16 -> if (k == 0) 1 else 0 // lockbox shackle
+            44 -> 2 // spire-guard shields
+            47 -> if (k == 0) 3 else 0 // nest-guard shell
             else -> 0
         }
         b.phases.add(
             Phase(
-                "WAVE ${k + 1}", until,
+                "PHASE ${k + 1}", until,
                 needsParts = needParts,
-                partHp = row.hp * 0.07f,
-                vuln = { if (needParts > 0) false else true },
+                partHp = spec.baseHp * 0.12f,
+                vuln = { bb ->
+                    when (spec.skillCode) {
+                        16 -> if (k == 0 && bb.parts.any { it.alive }) false else true
+                        17 -> (bb.timers[3] > 0f) // flareon shoot/shield alternating
+                        else -> if (needParts > 0) bb.parts.none { it.alive } else true
+                    }
+                },
                 tick = { bb, ww, dt ->
-                    bb.x += ((ww.w * 0.5f + sin(bb.tPhase * (0.4f + idx * 0.005f)) * (60f + idx)) - bb.x) * dt
-                    every(bb, dt, 0, (1.8f - k * 0.15f).coerceAtLeast(0.9f)) { genPattern(primary, bb, ww) }
-                    val secondary = if (primary == 0 || primary == 1 || primary == 10) 3 else 0
-                    every(bb, dt, 1, 4f) { genPattern(secondary, bb, ww) }
-                    if (row.weak == 3) {
-                        every(bb, dt, 2, 8f) {
-                            bb.weakUntil = ww.elapsed + 2.2f
-                            ww.addText(bb.x - 120f, bb.y + 80f, "OVERHEAT")
+                    // Unique boss movement based on archetype
+                    when (spec.skillCode) {
+                        4, 24 -> { // vortex gravity pull
+                            bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 1.5f) * 60f) - bb.x) * dt
+                            // pull player slightly towards center
+                            if (ww.player.y < ww.h * 0.75f) {
+                                ww.player.y += 45f * dt
+                            }
+                        }
+                        11 -> { // flare horizontal swoop
+                            bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 2.2f) * (ww.w * 0.35f)) - bb.x) * 1.5f * dt
+                        }
+                        12 -> { // delta aircraft banking
+                            bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 1.2f) * (ww.w * 0.28f)) - bb.x) * dt
+                        }
+                        28 -> { // needle rapid oscillation
+                            bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 3.5f) * (ww.w * 0.38f)) - bb.x) * 2.5f * dt
+                        }
+                        else -> {
+                            bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 0.7f) * (ww.w * 0.22f)) - bb.x) * dt
+                        }
+                    }
+
+                    // Primary attack routine
+                    every(bb, dt, 0, (1.8f - k * 0.2f).coerceAtLeast(0.7f)) {
+                        genPattern(spec.patternCode, bb, ww)
+                    }
+
+                    // Unique secondary skill behavior
+                    every(bb, dt, 1, 3.2f) {
+                        when (spec.skillCode) {
+                            1 -> { // prism refract spread
+                                val a = atan2(ww.player.y - bb.y, ww.player.x - bb.x)
+                                ww.bShot(bb.x, bb.y + 40f, cos(a - 0.3f) * 350f, sin(a - 0.3f) * 350f)
+                                ww.bShot(bb.x, bb.y + 40f, cos(a) * 350f, sin(a) * 350f)
+                                ww.bShot(bb.x, bb.y + 40f, cos(a + 0.3f) * 350f, sin(a + 0.3f) * 350f)
+                            }
+                            2 -> { // cascade music rhythm gaps
+                                ww.spawnWallBox(false)
+                            }
+                            3 -> { // gauntlet narrowing passage
+                                ww.spawnWallBox(true)
+                            }
+                            5, 43 -> { // beacon / colossus beam
+                                ww.addBeam(bb.x, 0f, bb.x, ww.h, 30f, 0.8f, 0.6f)
+                            }
+                            6 -> { // splitter dual attack
+                                ww.bAimed(bb.x - 60f, bb.y + 40f, 380f)
+                                ww.bAimed(bb.x + 60f, bb.y + 40f, 380f)
+                            }
+                            7 -> { // orbit fragments attack
+                                ww.bRadial(bb.x, bb.y + 40f, 8, 300f, bb.tPhase.toDouble())
+                            }
+                            8 -> { // sawtooth deflect burst
+                                ww.bRadial(bb.x, bb.y + 40f, 6, 320f, (-bb.tPhase).toDouble())
+                            }
+                            13, 42 -> { // web drone spawn & strands
+                                ww.spawnSpec(12, bb.x - 40f, bb.y + 40f)
+                                ww.spawnSpec(12, bb.x + 40f, bb.y + 40f)
+                            }
+                            15, 29 -> { // helix / coil spring release
+                                val a = atan2(ww.player.y - bb.y, ww.player.x - bb.x)
+                                repeat(5) { sIdx ->
+                                    ww.bShot(bb.x, bb.y + 40f, cos(a + (sIdx - 2) * 0.15f) * 440f, sin(a + (sIdx - 2) * 0.15f) * 440f)
+                                }
+                            }
+                            17 -> { // flareon shield toggle
+                                bb.timers[3] = if (bb.timers[3] > 0f) 0f else 2.5f
+                                ww.addText(bb.x - 60f, bb.y + 60f, if (bb.timers[3] > 0f) "VULNERABLE" else "SHIELDED")
+                            }
+                            21 -> { // pulse expanding ring
+                                ww.bRadial(bb.x, bb.y + 40f, 10, 260f + k * 40f, 0.0)
+                            }
+                            34 -> { // sentinel-wing wind gust
+                                for (wIdx in -2..2) {
+                                    ww.bShot(bb.x + wIdx * 40f, bb.y + 40f, wIdx * 40f, 360f)
+                                }
+                            }
+                            36 -> { // cataclysm spore cloud
+                                ww.bRadial(bb.x, bb.y + 40f, 12, 280f, (bb.tPhase * 2.0).toDouble())
+                            }
+                            41 -> { // dominion zone execution
+                                val zx = if (ww.player.x < ww.w * 0.5f) ww.w * 0.25f else ww.w * 0.75f
+                                ww.addBeam(zx, 0f, zx, ww.h, 45f, 0.9f, 0.7f)
+                            }
+                            48 -> { // ultimate planetary sovereign
+                                ww.bRadial(bb.x, bb.y + 60f, 14, 320f, bb.spinA.toDouble())
+                                bb.spinA += 0.8f
+                                ww.bAimed(bb.x, bb.y + 60f, 420f)
+                            }
+                            49 -> { // the devel red eye
+                                ww.bAimed(bb.x, bb.y + 40f, 460f)
+                                ww.addBeam(bb.x, 0f, bb.x, ww.h, 24f, 0.7f, 0.5f)
+                            }
+                            50 -> { // uncenced ai matrix
+                                ww.bRadial(bb.x, bb.y + 40f, 8, 300f, 0.0)
+                                ww.bRadial(bb.x, bb.y + 40f, 8, 300f, PI / 8.0)
+                            }
+                            else -> {
+                                ww.bRadial(bb.x, bb.y + 40f, 8, 280f, bb.tPhase.toDouble())
+                            }
                         }
                     }
                 }
@@ -408,342 +510,13 @@ private fun buildGenBoss(idx: Int, row: GenRow, mul: Float, w: Float, h: Float):
     return b
 }
 
-// ================================================================
 fun makeBoss(id: String, mul: Float, w: Float, h: Float): Boss {
-    if (id.startsWith("gen")) {
-        val idx = id.removePrefix("gen").toIntOrNull()?.coerceIn(0, GEN_TABLE.size - 1) ?: 0
-        return buildGenBoss(idx, GEN_TABLE[idx], mul, w, h)
-    }
-    val def = when (id) {
-        "sentinel" -> BossDef(id, "SENTINEL", 3000, 0.60f, 0.16f, 3.0f, 0)
-        "worm" -> BossDef(id, "WORM", 4500, 0.50f, 0.20f, 3.6f, 1)
-        "fortress" -> BossDef(id, "FORTRESS", 6000, 0.70f, 0.16f, 4.0f, 0)
-        "hunter" -> BossDef(id, "HUNTER", 3400, 0.24f, 0.15f, 4.0f, 0)
-        "colossus" -> BossDef(id, "COLOSSUS", 5600, 0.86f, 0.30f, 4.6f, 0)
-        else -> BossDef("core", "VOID CORE", 8000, 0.55f, 0.26f, 5.5f, 0)
-    }
-    val b = Boss(def, mul, w, h)
-    b.wPx = w * def.wFrac
-    b.hPx = h * def.hFrac
-    b.x = w / 2f
-    b.y = -b.hPx
-    b.targetY = when (id) {
-        "colossus" -> h * 0.13f
-        else -> h * 0.20f
-    }
-
-    when (id) {
-        // ---------- BOSS 1: SENTINEL ----------
-        "sentinel" -> {
-            b.maxHp = 2600f * mul; b.hp = b.maxHp
-            b.phases.add(
-                Phase("PERIMETER", 0.5f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 0.8f) * ww.w * 0.2f) - bb.x) * dt
-                        every(bb, dt, 0, 1.1f) { ww.bAimed(bb.x, bb.y + bb.hPx * 0.4f, 380f) }
-                        every(bb, dt, 1, 4f) {
-                            ww.addBeam(0f, ww.player.y, ww.w, ww.player.y, 26f, 0.9f, 0.7f)
-                        }
-                        every(bb, dt, 2, 7f) {
-                            ww.spawnSpec(0, bb.x - 80f, bb.y + 40f)
-                            ww.spawnSpec(0, bb.x + 80f, bb.y + 40f)
-                        }
-                    })
-            )
-            b.phases.add(
-                Phase("OVERDRIVE", 0f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 1.3f) * ww.w * 0.28f) - bb.x) * dt
-                        every(bb, dt, 0, 0.8f) { ww.bAimed(bb.x, bb.y + bb.hPx * 0.4f, 420f) }
-                        every(bb, dt, 1, 2.8f) {
-                            ww.addBeam(0f, ww.player.y, ww.w, ww.player.y, 30f, 0.8f, 0.7f)
-                        }
-                        every(bb, dt, 2, 6f) {
-                            repeat(3) { ww.spawnSpec(0, bb.x + (it - 1) * 90f, bb.y + 60f) }
-                        }
-                    })
-            )
+    // Check if ID matches any of our 50 custom skill bosses
+    val spec = ALL_50_BOSS_SPECS.find { it.id.equals(id, ignoreCase = true) }
+        ?: run {
+            val idx = (id.replace("boss", "").replace("gen", "").toIntOrNull() ?: 0).coerceIn(0, 49)
+            ALL_50_BOSS_SPECS[idx]
         }
-        // ---------- BOSS 2: WORM ----------
-        "worm" -> {
-            b.maxHp = 3400f * mul; b.hp = b.maxHp
-            fun layout(bb: Boss, ww: World, cx: Float, cy: Float) {
-                bb.segs.clear()
-                for (i in 0 until 7) {
-                    val sx = cx + sin(bb.tPhase * 2f + i * 0.8f) * ww.w * 0.06f + i * ww.w * 0.055f - ww.w * 0.16f
-                    val sy = cy + sin(bb.tPhase * 2.4f + i * 0.9f) * ww.h * 0.05f
-                    bb.segs.add(Pair(sx, sy))
-                }
-            }
-            b.phases.add(
-                Phase("BURROW", 0.5f,
-                    enter = { bb, ww -> layout(bb, ww, ww.w * 0.5f, ww.h * 0.18f) },
-                    tick = { bb, ww, dt ->
-                        val charging = bb.timers[7] > 0
-                        if (!charging) {
-                            val cx = ww.w * 0.5f + sin(bb.tPhase * 0.5f) * ww.w * 0.08f
-                            val cy = ww.h * 0.18f + sin(bb.tPhase * 0.7f) * ww.h * 0.05f
-                            layout(bb, ww, cx, cy)
-                            val head = bb.segs[0]
-                            bb.x = head.first
-                            bb.y = head.second
-                        }
-                        every(bb, dt, 0, 2.2f) {
-                            val s = bb.segs.firstOrNull() ?: return@every
-                            val a = atan2(ww.player.y - s.second, ww.player.x - s.first)
-                            for (k in -1..1) ww.bShot(s.first, s.second, cos(a + k * 0.3f) * 360f, sin(a + k * 0.3f) * 360f)
-                        }
-                        every(bb, dt, 1, 7f) {
-                            bb.timers[7] = 1.6f
-                            bb.timers[6] = ww.player.x
-                            ww.addBeam(ww.player.x, 0f, ww.player.x, ww.h, 10f, 0.7f, 0.01f)
-                        }
-                        if (charging) {
-                            bb.timers[7] -= dt
-                            val tx = bb.timers[6]
-                            if (bb.timers[7] < 0.9f) {
-                                val ph = 1f - bb.timers[7] / 0.9f
-                                val hy = if (ph < 0.5f) ww.h * 0.18f + ph * 2f * ww.h * 0.8f else ww.h * 0.98f - (ph - 0.5f) * 2f * ww.h * 0.8f
-                                layout(bb, ww, tx, hy)
-                                bb.x = tx
-                                bb.y = hy
-                            }
-                        }
-                    })
-            )
-            b.phases.add(
-                Phase("FRENZY", 0f,
-                    tick = { bb, ww, dt ->
-                        val cx = ww.w * 0.5f + sin(bb.tPhase * 0.9f) * ww.w * 0.1f
-                        val cy = ww.h * 0.2f + sin(bb.tPhase * 1.2f) * ww.h * 0.06f
-                        layout(bb, ww, cx, cy)
-                        val head = bb.segs[0]
-                        bb.x = head.first
-                        bb.y = head.second
-                        every(bb, dt, 0, 1.6f) {
-                            val s = bb.segs.firstOrNull() ?: return@every
-                            val a = atan2(ww.player.y - s.second, ww.player.x - s.first)
-                            for (k in -2..2) ww.bShot(s.first, s.second, cos(a + k * 0.28f) * 380f, sin(a + k * 0.28f) * 380f)
-                        }
-                        every(bb, dt, 1, 5f) { ww.bRadial(bb.x, bb.y, 10, 280f, bb.tPhase.toDouble()) }
-                        every(bb, dt, 2, 6f) {
-                            bb.timers[7] = 1.4f
-                            bb.timers[6] = ww.player.x
-                            ww.addBeam(ww.player.x, 0f, ww.player.x, ww.h, 10f, 0.6f, 0.01f)
-                        }
-                        if (bb.timers[7] > 0) {
-                            bb.timers[7] -= dt
-                            if (bb.timers[7] < 0.8f) {
-                                val ph = 1f - bb.timers[7] / 0.8f
-                                val tx = bb.timers[6]
-                                val hy = if (ph < 0.5f) ww.h * 0.2f + ph * 2f * ww.h * 0.8f else ww.h - (ph - 0.5f) * 2f * ww.h * 0.8f
-                                layout(bb, ww, tx, hy)
-                                bb.x = tx
-                                bb.y = hy
-                            }
-                        }
-                    })
-            )
-        }
-        // ---------- BOSS 3: FORTRESS ----------
-        "fortress" -> {
-            b.maxHp = 4600f * mul; b.hp = b.maxHp
-            b.phases.add(
-                Phase("BATTERIES", 0.62f, needsParts = 3, partHp = 220f, vuln = { false },
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 0.4f) * 40f) - bb.x) * dt
-                        every(bb, dt, 0, 1.7f) {
-                            for (pt in bb.parts) {
-                                if (!pt.alive) continue
-                                ww.bAimed(bb.x + pt.ox, bb.y + pt.oy, 380f)
-                            }
-                        }
-                    })
-            )
-            b.phases.add(
-                Phase("CORE EXPOSED", 0.3f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 0.6f) * ww.w * 0.1f) - bb.x) * dt
-                        every(bb, dt, 0, 2.2f) { ww.bRadial(bb.x, bb.y + bb.hPx * 0.3f, 10, 280f, bb.tPhase.toDouble()) }
-                        every(bb, dt, 1, 5f) {
-                            ww.spawnSpec(37, bb.x - 100f, bb.y + 60f)
-                            ww.spawnSpec(37, bb.x + 100f, bb.y + 60f)
-                        }
-                    })
-            )
-            b.phases.add(
-                Phase("MELTDOWN", 0f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.player.x) - bb.x) * 0.6f * dt
-                        every(bb, dt, 0, 1.4f) { ww.bRadial(bb.x, bb.y + bb.hPx * 0.3f, 12, 300f, (-bb.tPhase).toDouble()) }
-                        every(bb, dt, 1, 3.4f) {
-                            ww.addBeam(0f, bb.y + 60f, ww.w, bb.y + 60f, 26f, 0.8f, 0.7f)
-                        }
-                    })
-            )
-        }
-        // ---------- BOSS 4: HUNTER ----------
-        "hunter" -> {
-            b.maxHp = 3400f * mul; b.hp = b.maxHp
-            b.phases.add(
-                Phase("DUEL", 0.5f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.player.x) - bb.x) * 2.2f * dt
-                        bb.y += ((ww.h * 0.24f + sin(bb.tPhase * 0.9f) * 60f) - bb.y) * dt
-                        every(bb, dt, 0, 1.4f) {
-                            repeat(3) { ww.bAimed(bb.x, bb.y + 50f, 440f) }
-                        }
-                        every(bb, dt, 1, 3.2f) {
-                            bb.timers[7] = 0.9f
-                            bb.timers[5] = ww.player.x
-                            bb.timers[6] = ww.player.y - 260f
-                            bb.flash = 0.5f
-                        }
-                        if (bb.timers[7] > 0) {
-                            bb.timers[7] -= dt
-                            if (bb.timers[7] < 0.4f) {
-                                bb.x += ((bb.timers[5]) - bb.x) * 8f * dt
-                                bb.y += ((bb.timers[6]) - bb.y) * 8f * dt
-                            }
-                        }
-                        every(bb, dt, 2, 9f) {
-                            bb.weakUntil = ww.elapsed + 2.2f
-                            ww.addText(bb.x - 120f, bb.y + 80f, "OVERHEAT")
-                        }
-                    })
-            )
-            b.phases.add(
-                Phase("BLOODLUST", 0f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.player.x) - bb.x) * 2.8f * dt
-                        bb.y += ((ww.h * 0.22f + sin(bb.tPhase * 1.4f) * 90f) - bb.y) * dt
-                        every(bb, dt, 0, 1.1f) {
-                            val a = atan2(ww.player.y - bb.y, ww.player.x - bb.x)
-                            for (k in -2..2) ww.bShot(bb.x, bb.y + 50f, cos(a + k * 0.22f) * 440f, sin(a + k * 0.22f) * 440f)
-                        }
-                        every(bb, dt, 1, 2.4f) {
-                            bb.timers[7] = 0.8f
-                            bb.timers[5] = ww.player.x
-                            bb.timers[6] = ww.player.y - 240f
-                            bb.flash = 0.5f
-                        }
-                        if (bb.timers[7] > 0) {
-                            bb.timers[7] -= dt
-                            if (bb.timers[7] < 0.35f) {
-                                bb.x += ((bb.timers[5]) - bb.x) * 9f * dt
-                                bb.y += ((bb.timers[6]) - bb.y) * 9f * dt
-                            }
-                        }
-                        every(bb, dt, 2, 8f) {
-                            bb.weakUntil = ww.elapsed + 2.2f
-                            ww.addText(bb.x - 120f, bb.y + 80f, "OVERHEAT")
-                        }
-                    })
-            )
-        }
-        // ---------- BOSS 5: COLOSSUS ----------
-        "colossus" -> {
-            b.maxHp = 5600f * mul; b.hp = b.maxHp
-            b.phases.add(
-                Phase("PLATING", 0.66f, needsParts = 3, partHp = 380f, vuln = { false },
-                    tick = { bb, ww, dt ->
-                        every(bb, dt, 0, 1.8f) {
-                            for (pt in bb.parts) {
-                                if (!pt.alive) continue
-                                ww.bAimed(bb.x + pt.ox, bb.y + pt.oy, 380f)
-                            }
-                        }
-                        every(bb, dt, 1, 5f) { ww.spawnSpec(1, bb.x - bb.wPx * 0.3f, bb.y + 60f) }
-                    })
-            )
-            b.phases.add(
-                Phase("FURNACE", 0.25f,
-                    tick = { bb, ww, dt ->
-                        every(bb, dt, 0, 2.6f) { ww.bRadial(bb.x, bb.y + 60f, 12, 290f, bb.tPhase.toDouble()) }
-                        every(bb, dt, 1, 3.8f) {
-                            ww.addBeam(0f, bb.y + 100f, ww.w, bb.y + 100f, 30f, 0.9f, 0.8f)
-                            ww.addBeam(0f, bb.y + 200f, ww.w, bb.y + 200f, 30f, 1.1f, 0.8f)
-                        }
-                        every(bb, dt, 2, 3f) {
-                            ww.bAimed(bb.x - 80f, bb.y + 80f, 300f, 12f)
-                            ww.bAimed(bb.x + 80f, bb.y + 80f, 300f, 12f)
-                        }
-                    })
-            )
-            b.phases.add(
-                Phase("COLLAPSE", 0f,
-                    tick = { bb, ww, dt ->
-                        every(bb, dt, 0, 1.6f) { ww.bRadial(bb.x, bb.y + 60f, 16, 310f, (-bb.tPhase * 1.4f).toDouble()) }
-                        every(bb, dt, 1, 2.8f) {
-                            ww.addBeam(ww.player.x - 120f, 0f, ww.player.x - 120f, ww.h, 30f, 0.8f, 0.7f)
-                            ww.addBeam(ww.player.x + 120f, 0f, ww.player.x + 120f, ww.h, 30f, 0.8f, 0.7f)
-                        }
-                        every(bb, dt, 2, 4f) { ww.spawnSpec(39, bb.x, bb.y + 100f) }
-                    })
-            )
-        }
-        // ---------- FINAL BOSS: VOID CORE ----------
-        "core" -> {
-            b.maxHp = 8000f * mul; b.hp = b.maxHp
-            b.phases.add(
-                Phase("EYE OPENS", 0.8f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 0.5f) * ww.w * 0.1f) - bb.x) * dt
-                        every(bb, dt, 0, 1.5f) { ww.bAimed(bb.x, bb.y + 80f, 400f) }
-                        every(bb, dt, 1, 2.6f) { ww.bRadial(bb.x, bb.y + 80f, 8, 280f, bb.tPhase.toDouble()) }
-                    })
-            )
-            b.phases.add(
-                Phase("SPIRAL", 0.6f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 0.7f) * ww.w * 0.15f) - bb.x) * dt
-                        bb.spinA += dt * 2.2f
-                        every(bb, dt, 0, 0.3f) {
-                            for (k in 0 until 3) {
-                                val a = bb.spinA + k * 2f * PI.toFloat() / 3f
-                                ww.bShot(bb.x, bb.y + 60f, cos(a) * 300f, sin(a) * 300f)
-                            }
-                        }
-                        every(bb, dt, 1, 4f) { ww.spawnSpec(37, bb.x, bb.y + 80f) }
-                    })
-            )
-            b.phases.add(
-                Phase("EVENT WALL", 0.4f, needsParts = 2, partHp = 340f, vuln = { false },
-                    tick = { bb, ww, dt ->
-                        every(bb, dt, 0, 1.8f) { ww.bRadial(bb.x, bb.y + 80f, 12, 290f, (-bb.tPhase).toDouble()) }
-                        every(bb, dt, 1, 4.5f) { ww.spawnWallBox(false) }
-                        every(bb, dt, 2, 3f) {
-                            ww.bAimed(bb.x - 60f, bb.y + 80f, 400f)
-                            ww.bAimed(bb.x + 60f, bb.y + 80f, 400f)
-                        }
-                    })
-            )
-            b.phases.add(
-                Phase("SINGULARITY", 0.18f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.player.x) - bb.x) * 1.2f * dt
-                        every(bb, dt, 0, 1.1f) { ww.bRadial(bb.x, bb.y + 80f, 14, 300f, (bb.tPhase * 1.5f).toDouble()) }
-                        every(bb, dt, 1, 2.6f) {
-                            ww.addBeam(ww.player.x, 0f, ww.player.x, ww.h, 34f, 0.8f, 0.7f)
-                        }
-                        every(bb, dt, 2, 3.4f) { ww.spawnSpec(26, bb.x - 60f, bb.y + 80f); ww.spawnSpec(26, bb.x + 60f, bb.y + 80f) }
-                    })
-            )
-            b.phases.add(
-                Phase("UNSTABLE", 0f,
-                    tick = { bb, ww, dt ->
-                        bb.x += ((ww.w * 0.5f + sin(bb.tPhase * 2.2f) * ww.w * 0.3f) - bb.x) * 2f * dt
-                        ww.shake = 3f
-                        every(bb, dt, 0, 0.85f) { ww.bRadial(bb.x, bb.y + 80f, 16, 320f, bb.spinA.toDouble()) }
-                        bb.spinA += dt * 1.5f
-                        every(bb, dt, 1, 1.3f) {
-                            val a = atan2(ww.player.y - bb.y, ww.player.x - bb.x)
-                            for (k in -2..2) ww.bShot(bb.x, bb.y + 80f, cos(a + k * 0.2f) * 420f, sin(a + k * 0.2f) * 420f)
-                        }
-                        every(bb, dt, 2, 5f) { ww.spawnWallBox(true) }
-                    })
-            )
-        }
-    }
-    return b
+    val idx = ALL_50_BOSS_SPECS.indexOf(spec)
+    return buildCustomSkillBoss(spec, idx, mul, w, h)
 }

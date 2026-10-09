@@ -419,17 +419,13 @@ class World(val save: Save, val sound: Sound) {
     var scrollM = 1f
     var gapM = 1.15f
 
-    /** 50 bosses across the journey: 6 handcrafted milestones, VOID CORE last. */
+    /** 50 unique bosses across the journey with custom skills and designs. */
     private fun bossSchedule(): Pair<MutableList<Float>, MutableList<String>> {
-        val crafted = mapOf(
-            4 to "sentinel", 11 to "worm", 19 to "fortress",
-            27 to "hunter", 36 to "colossus", 49 to "core"
-        )
         val marks = mutableListOf<Float>()
         val ids = mutableListOf<String>()
         for (i in 0 until 50) {
             marks.add(0.03f + i * (0.92f / 49f))
-            ids.add(crafted[i] ?: "gen$i")
+            ids.add(ALL_50_BOSS_SPECS[i].id)
         }
         return Pair(marks, ids)
     }
