@@ -74,6 +74,6 @@ val ALL_50_BOSS_SPECS = listOf(
     BossSpecInfo("cross-break", "CROSS-BREAK", "HARD", 3000f, 10, 46, 4), // separating & returning cross arms
     BossSpecInfo("nest-guard", "NEST-GUARD", "HARD", 3200f, 8, 47, 4), // peeling reinforced shell layers
     BossSpecInfo("ultimate", "ULTIMATE", "FINAL", 5000f, 6, 48, 5), // 3-phase composite sovereign
-    BossSpecInfo("custom-49", "DEVEL RED EYE", "EASY", 2000f, 0, 49, 3), // demonic ocular gaze
-    BossSpecInfo("custom-50", "UNCENCED AI", "MEDIUM", 3500f, 4, 50, 4) // rogue cybernetic AI hyper-matrix
+    BossSpecInfo("void-walker", "VOID-WALKER", "EASY", 1850f, 0, 49, 2), // intangible phasing entity
+    BossSpecInfo("star-forge", "STAR-FORGE", "MEDIUM", 3400f, 4, 50, 4) // rotating pentagram with orbiting rune stones
 )

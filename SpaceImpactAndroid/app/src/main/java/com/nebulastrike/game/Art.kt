@@ -958,32 +958,35 @@ object Art {
                 c.drawOval((x-bw*0.22).toFloat(), (y-bw*0.22).toFloat(), (x+bw*0.22).toFloat(), (y+bw*0.22).toFloat(), stroke)
                 c.drawOval((x-bw*0.09).toFloat(), (y-bw*0.09).toFloat(), (x+bw*0.09).toFloat(), (y+bw*0.09).toFloat(), fill.apply { color = col })
             }
-            "custom-49", "48", "boss48" -> { // #49 THE DEVEL RED EYE (ID: custom-49)
-                path.reset()
-                path.moveTo((x).toFloat(), (y + bw * 0.35).toFloat())
-                path.lineTo((x - bw * 0.45).toFloat(), (y - bw * 0.2).toFloat())
-                path.lineTo((x - bw * 0.25).toFloat(), (y - bw * 0.42).toFloat())
-                path.lineTo((x + bw * 0.25).toFloat(), (y - bw * 0.42).toFloat())
-                path.lineTo((x + bw * 0.45).toFloat(), (y - bw * 0.2).toFloat())
-                path.close()
-                c.drawPath(path, fill.apply { color = bg })
-                stroke.color = col; stroke.strokeWidth = 3f; c.drawPath(path, stroke)
-                c.drawOval((x-bw*0.25).toFloat(), (y-bw*0.18).toFloat(), (x+bw*0.25).toFloat(), (y+bw*0.18).toFloat(), fill.apply { color = col })
-                c.drawOval((x-bw*0.08).toFloat(), (y-bw*0.18).toFloat(), (x+bw*0.08).toFloat(), (y+bw*0.18).toFloat(), fill.apply { color = inv })
-                c.drawOval((x-3).toFloat(), (y-3).toFloat(), (x+3).toFloat(), (y+3).toFloat(), fill.apply { color = col })
-            }
-            "custom-50", "49", "boss49" -> { // #50 UNCENCED AI (ID: custom-50)
-                stroke.color = col; stroke.strokeWidth = 3f
-                c.drawRect((x-bw*0.38).toFloat(), (y-bw*0.38).toFloat(), (x+bw*0.38).toFloat(), (y+bw*0.38).toFloat(), stroke)
-                c.drawRect((x-bw*0.25).toFloat(), (y-bw*0.25).toFloat(), (x+bw*0.25).toFloat(), (y+bw*0.25).toFloat(), fill.apply { color = bg })
+            "void-walker", "custom-49", "48", "boss48" -> { // #49 VOID-WALKER (ID: void-walker)
+                // Intangible phasing entity with shifting translucent diamond shell & core
                 stroke.color = col; stroke.strokeWidth = 2f
-                c.drawRect((x-bw*0.25).toFloat(), (y-bw*0.25).toFloat(), (x+bw*0.25).toFloat(), (y+bw*0.25).toFloat(), stroke)
-                c.drawRect((x-bw*0.12).toFloat(), (y-bw*0.12).toFloat(), (x+bw*0.12).toFloat(), (y+bw*0.12).toFloat(), fill.apply { color = col })
-                stroke.color = col; stroke.strokeWidth = 3f
-                for (cx_sign in floatArrayOf(-1f, 1f)) {
-                    for (cy_sign in floatArrayOf(-1f, 1f)) {
-                        c.drawLine(x + cx_sign * bw * 0.25f, y + cy_sign * bw * 0.25f, x + cx_sign * bw * 0.45f, y + cy_sign * bw * 0.45f, stroke)
-                    }
+                c.drawOval(x - bw * 0.4f, y - bw * 0.35f, x + bw * 0.4f, y + bw * 0.35f, stroke)
+                path.reset()
+                path.moveTo(x, y - bw * 0.45f)
+                path.lineTo(x + bw * 0.35f, y)
+                path.lineTo(x, y + bw * 0.45f)
+                path.lineTo(x - bw * 0.35f, y)
+                path.close()
+                stroke.color = col; stroke.strokeWidth = 3f; c.drawPath(path, stroke)
+                c.drawOval(x - bw * 0.12f, y - bw * 0.12f, x + bw * 0.12f, y + bw * 0.12f, fill.apply { color = col })
+            }
+            "star-forge", "custom-50", "49", "boss49" -> { // #50 STAR-FORGE (ID: star-forge)
+                // Rotating 5-point pentagram star with orbiting rune nodes
+                path.reset()
+                for (step in 0 until 5) {
+                    val aOuter = (step * 4 * PI / 5 - PI / 2).toFloat()
+                    val px = x + cos(aOuter) * bw * 0.42f
+                    val py = y + sin(aOuter) * bw * 0.42f
+                    if (step == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                }
+                path.close()
+                stroke.color = col; stroke.strokeWidth = 3f; c.drawPath(path, stroke)
+                c.drawOval(x - bw * 0.1f, y - bw * 0.1f, x + bw * 0.1f, y + bw * 0.1f, fill.apply { color = col })
+                for (sIdx in 0 until 4) {
+                    val sa = (sIdx * PI / 2 + 0.4f).toFloat()
+                    c.drawRect(x + cos(sa) * bw * 0.48f - 5f, y + sin(sa) * bw * 0.48f - 5f,
+                               x + cos(sa) * bw * 0.48f + 5f, y + sin(sa) * bw * 0.48f + 5f, fill.apply { color = col })
                 }
             }
             else -> {
