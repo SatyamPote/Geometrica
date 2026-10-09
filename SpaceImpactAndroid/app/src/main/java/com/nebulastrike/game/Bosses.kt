@@ -101,6 +101,7 @@ class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
             if (hypot(px - (x + pt.ox), py - (y + pt.oy)) < pt.r + 24f) {
                 pt.hp -= dmg
                 flash = 0.06f
+                world.explode(px, py, 2, false)
                 if (pt.hp <= 0) {
                     pt.alive = false
                     world.explode(x + pt.ox, y + pt.oy, 16, true)
@@ -119,6 +120,7 @@ class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
         if (!hitTest(px, py)) return false
         hp -= dmg * weakMul(t)
         flash = 0.07f
+        world.explode(px, py, 2, false)
         if (hp <= phase().until * maxHp) advanceOrDie(world)
         return true
     }

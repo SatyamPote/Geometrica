@@ -1385,20 +1385,22 @@ class World(val save: Save, val sound: Sound) {
         for (m in items.toList()) {
             if (!items.contains(m)) continue
             m.t += dt
-            m.y += 130f * dt
+            m.y += 115f * dt
             if (!player.dead) {
                 val d = hypot(player.x - m.x, player.y - m.y)
-                if (d < 150f && d > 1f) {
-                    m.x += (player.x - m.x) / d * 460f * dt
-                    m.y += (player.y - m.y) / d * 460f * dt
+                // Magnetic vacuum attraction: up to 240px range
+                if (d < 240f && d > 1f) {
+                    val magnetSpd = (540f * (1f - d / 260f)).coerceAtLeast(280f)
+                    m.x += (player.x - m.x) / d * magnetSpd * dt
+                    m.y += (player.y - m.y) / d * magnetSpd * dt
                 }
-                if (d < 40f) {
+                if (d < 46f) {
                     applyItem(m.kind)
                     items.remove(m)
                     continue
                 }
             }
-            if (m.y > h + 40f) items.remove(m)
+            if (m.y > h + 60f) items.remove(m)
         }
     }
 
