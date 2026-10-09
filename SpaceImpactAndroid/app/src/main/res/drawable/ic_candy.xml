@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- retro interceptor ship icon: light green / light yellow / white / gray -->
+    <path
+        android:fillColor="#90EE90"
+        android:pathData="M54,14 L66,58 L54,50 L42,58 Z" />
+    <path
+        android:fillColor="#4A7C4E"
+        android:pathData="M42,58 L30,84 L44,74 Z" />
+    <path
+        android:fillColor="#4A7C4E"
+        android:pathData="M66,58 L78,84 L64,74 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,34 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <path
+        android:fillColor="#FFFFE0"
+        android:pathData="M38,88 l5,0 l-2,6 l-5,0 Z" />
+    <path
+        android:fillColor="#FFFFE0"
+        android:pathData="M70,88 l-5,0 l2,6 l5,0 Z" />
+    <path
+        android:fillColor="#9AA0A6"
+        android:pathData="M20,30 l6,0 l-3,6 Z" />
+    <path
+        android:fillColor="#9AA0A6"
+        android:pathData="M88,30 l-6,0 l3,6 Z" />
+</vector>
