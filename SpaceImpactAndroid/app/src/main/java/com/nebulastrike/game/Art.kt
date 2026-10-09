@@ -113,114 +113,130 @@ object Art {
         c.drawPath(path, fill)
     }
 
-    // ---------------- pickups ----------------
+    // ---------------- pickups (Vibrant Colors for Instant Differentiation) ----------------
     fun drawItem(c: Canvas, kind: Int, x: Float, y: Float, r: Float, t: Long, txt: Paint) {
-        // 1. Outer Expanding Beacon Pulse (shows player this is a collectible loot item!)
-        val pulsePhase = ((t % 700) / 700f)
-        val pulseR = r * (1.1f + pulsePhase * 0.9f)
-        stroke.color = WHITE
-        stroke.strokeWidth = 2f
-        stroke.alpha = ((1f - pulsePhase) * 180).toInt().coerceIn(0, 255)
+        // Distinct Colors
+        val RED_HEART = 0xFFFF1744.toInt()
+        val GOLD_COIN = 0xFFFFD700.toInt()
+        val RARE_GOLD = 0xFFFF9100.toInt()
+        val CYAN_RAPID = 0xFF00E5FF.toInt()
+        val GREEN_DUAL = 0xFF00E676.toInt()
+        val PURPLE_SPREAD = 0xFFE040FB.toInt()
+        val ORANGE_PIERCE = 0xFFFF6D00.toInt()
+        val TEAL_PART = 0xFF1DE9B6.toInt()
+
+        val mainCol = when (kind) {
+            4 -> RED_HEART
+            P_COIN -> GOLD_COIN
+            P_COIN_RARE -> RARE_GOLD
+            P_RAPID -> CYAN_RAPID
+            P_DOUBLE -> GREEN_DUAL
+            P_SPREAD -> PURPLE_SPREAD
+            P_PIERCE -> ORANGE_PIERCE
+            P_PART -> TEAL_PART
+            else -> GOLD_COIN
+        }
+
+        // 1. Outer Expanding Beacon Pulse in Pickup's Color
+        val pulsePhase = ((t % 750) / 750f)
+        val pulseR = r * (1.1f + pulsePhase * 0.95f)
+        stroke.color = mainCol
+        stroke.strokeWidth = 2.5f
+        stroke.alpha = ((1f - pulsePhase) * 220).toInt().coerceIn(0, 255)
         c.drawCircle(x, y, pulseR, stroke)
         stroke.alpha = 255
 
         when (kind) {
-            4 -> { // HEART / HP PICKUP (Glowing pulsing heart + medical cross + label)
-                val beat = 1f + sin(t * 0.008f).toFloat() * 0.12f
-                val hr = r * 0.85f * beat
+            4 -> { // RED HEART PICKUP (Pulsing vibrant red heart with medical cross)
+                val beat = 1f + sin(t * 0.008f).toFloat() * 0.14f
+                val hr = r * 0.9f * beat
                 val u = hr / 3f
 
-                // Heart shape
-                fill.color = WHITE
-                c.drawCircle(x - 0.8f * u, y - 0.6f * u, 0.9f * u, fill)
-                c.drawCircle(x + 0.8f * u, y - 0.6f * u, 0.9f * u, fill)
+                fill.color = RED_HEART
+                c.drawCircle(x - 0.8f * u, y - 0.6f * u, 0.95f * u, fill)
+                c.drawCircle(x + 0.8f * u, y - 0.6f * u, 0.95f * u, fill)
                 path.reset()
-                path.moveTo(x - 1.7f * u, y - 0.3f * u)
-                path.lineTo(x, y + 1.8f * u)
-                path.lineTo(x + 1.7f * u, y - 0.3f * u)
+                path.moveTo(x - 1.75f * u, y - 0.3f * u)
+                path.lineTo(x, y + 1.9f * u)
+                path.lineTo(x + 1.75f * u, y - 0.3f * u)
                 path.close()
                 c.drawPath(path, fill)
 
-                // Medical Cross in heart center
-                fill.color = BLACK
-                c.drawRect(x - 2f, y - 0.8f * u, x + 2f, y + 0.6f * u, fill)
-                c.drawRect(x - 0.7f * u, y - 2f, x + 0.7f * u, y + 2f, fill)
+                // White Medical Cross in center
+                fill.color = WHITE
+                c.drawRect(x - 2.5f, y - 0.8f * u, x + 2.5f, y + 0.6f * u, fill)
+                c.drawRect(x - 0.75f * u, y - 2.5f, x + 0.75f * u, y + 2.5f, fill)
 
-                // Label pill
                 txt.textAlign = Paint.Align.CENTER
-                txt.textSize = 9.5f
-                txt.color = WHITE
-                c.drawText("♥ HULL", x, y + r + 13f, txt)
+                txt.textSize = 10f
+                txt.color = RED_HEART
+                c.drawText("♥ +HULL", x, y + r + 14f, txt)
             }
-            P_COIN, P_COIN_RARE -> { // COIN / GOLD PICKUP (3D spinning perspective disc + sparkle + label)
+            P_COIN, P_COIN_RARE -> { // GOLDEN COIN PICKUP (Vibrant Gold 3D spinning coin)
                 val isRare = (kind == P_COIN_RARE)
-                val spin = cos(t * 0.006f).toFloat()
-                val coinW = (r * 0.9f * kotlin.math.abs(spin)).coerceAtLeast(3f)
-                val coinH = r * 0.9f
+                val coinCol = if (isRare) RARE_GOLD else GOLD_COIN
+                val spin = cos(t * 0.007f).toFloat()
+                val coinW = (r * 0.92f * kotlin.math.abs(spin)).coerceAtLeast(4f)
+                val coinH = r * 0.92f
 
-                // Outer coin disc
-                fill.color = if (isRare && (t / 120) % 2L == 0L) WHITE else DARK
+                fill.color = coinCol
                 c.drawOval(x - coinW, y - coinH, x + coinW, y + coinH, fill)
                 stroke.color = WHITE
-                stroke.strokeWidth = if (isRare) 3f else 2f
+                stroke.strokeWidth = 2f
                 c.drawOval(x - coinW, y - coinH, x + coinW, y + coinH, stroke)
 
-                // Inner rim & symbol
-                if (coinW > 6f) {
-                    stroke.strokeWidth = 1f
-                    c.drawOval(x - coinW * 0.7f, y - coinH * 0.7f, x + coinW * 0.7f, y + coinH * 0.7f, stroke)
+                if (coinW > 7f) {
+                    stroke.color = 0xFF8B6508.toInt()
+                    stroke.strokeWidth = 1.5f
+                    c.drawOval(x - coinW * 0.72f, y - coinH * 0.72f, x + coinW * 0.72f, y + coinH * 0.72f, stroke)
                     txt.textAlign = Paint.Align.CENTER
                     txt.textSize = r * 0.95f
-                    txt.color = WHITE
-                    c.drawText(if (isRare) "G" else "C", x, y + coinH * 0.38f, txt)
+                    txt.color = BLACK
+                    c.drawText(if (isRare) "★" else "C", x, y + coinH * 0.36f, txt)
                 }
 
-                // Sparkle glint on gold
-                if (isRare) {
-                    val sa = (t * 0.004f).toFloat()
-                    val sx = x + cos(sa) * r * 1.3f
-                    val sy = y + sin(sa) * r * 1.3f
-                    c.drawLine(sx - 3f, sy, sx + 3f, sy, stroke)
-                    c.drawLine(sx, sy - 3f, sx, sy + 3f, stroke)
-                }
+                // Sparkle glints
+                val sa = (t * 0.005f).toFloat()
+                val sx = x + cos(sa) * r * 1.35f
+                val sy = y + sin(sa) * r * 1.35f
+                stroke.color = WHITE; stroke.strokeWidth = 2f
+                c.drawLine(sx - 3.5f, sy, sx + 3.5f, sy, stroke)
+                c.drawLine(sx, sy - 3.5f, sx, sy + 3.5f, stroke)
 
-                // Label pill
                 txt.textAlign = Paint.Align.CENTER
-                txt.textSize = 9.5f
-                txt.color = WHITE
-                c.drawText(if (isRare) "+500 C" else "+100 C", x, y + r + 13f, txt)
+                txt.textSize = 10f
+                txt.color = coinCol
+                c.drawText(if (isRare) "+500 C GOLD" else "+100 C", x, y + r + 14f, txt)
             }
-            P_PART -> { // SHIP PART COLLECTIBLE (Rotating 4-tooth tech gear + label)
+            P_PART -> { // TEAL SHIP TECH PART (Rotating 4-tooth cyan/teal gear)
                 val rot = (t * 0.003f).toFloat()
                 fill.color = DARK
                 c.drawCircle(x, y, r * 0.85f, fill)
-                stroke.color = WHITE
-                stroke.strokeWidth = 2.5f
+                stroke.color = TEAL_PART
+                stroke.strokeWidth = 3f
                 c.drawCircle(x, y, r * 0.85f, stroke)
 
-                // 4 gear teeth
                 for (i in 0 until 4) {
                     val a = rot + i * PI.toFloat() / 2f
                     val tx = x + cos(a) * r * 0.85f
                     val ty = y + sin(a) * r * 0.85f
-                    c.drawRect(tx - 3f, ty - 3f, tx + 3f, ty + 3f, fill.apply { color = WHITE })
+                    c.drawRect(tx - 3.5f, ty - 3.5f, tx + 3.5f, ty + 3.5f, fill.apply { color = TEAL_PART })
                 }
-                fill.color = BLACK
+                fill.color = TEAL_PART
                 c.drawCircle(x, y, r * 0.35f, fill)
                 fill.color = WHITE
                 c.drawCircle(x, y, r * 0.15f, fill)
 
                 txt.textAlign = Paint.Align.CENTER
-                txt.textSize = 9.5f
-                txt.color = WHITE
-                c.drawText("⚙ PART", x, y + r + 13f, txt)
+                txt.textSize = 10f
+                txt.color = TEAL_PART
+                c.drawText("⚙ PART", x, y + r + 14f, txt)
             }
-            else -> { // WEAPON POWER-UP CAPSULES (RAPID, DUAL, SPREAD, PIERCE)
+            else -> { // COLORFUL POWER-UP CAPSULES (Cyan Rapid, Green Dual, Purple Spread, Orange Pierce)
                 val names = arrayOf("RAPID", "DUAL", "SPREAD", "PIERCE")
                 val letters = arrayOf("R", "2", "S", "P")
                 val pIdx = kind.coerceIn(0, 3)
 
-                // Octagonal capsule container
                 path.reset()
                 val capR = r * 0.95f
                 for (i in 0 until 8) {
@@ -231,24 +247,23 @@ object Art {
                 }
                 path.close()
 
-                fill.color = DARK
+                fill.color = mainCol
                 c.drawPath(path, fill)
                 stroke.color = WHITE
                 stroke.strokeWidth = 2.5f
                 c.drawPath(path, stroke)
 
-                // Inner bright letter badge
-                fill.color = WHITE
+                // High-contrast badge inside
+                fill.color = BLACK
                 c.drawCircle(x, y, r * 0.58f, fill)
                 txt.textAlign = Paint.Align.CENTER
                 txt.textSize = r * 0.95f
-                txt.color = BLACK
+                txt.color = mainCol
                 c.drawText(letters[pIdx], x, y + r * 0.34f, txt)
 
-                // Subtitle label
-                txt.textSize = 9.5f
-                txt.color = WHITE
-                c.drawText("[ ${names[pIdx]} ]", x, y + r + 13f, txt)
+                txt.textSize = 10f
+                txt.color = mainCol
+                c.drawText("[ ${names[pIdx]} ]", x, y + r + 14f, txt)
             }
         }
     }

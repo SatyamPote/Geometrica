@@ -849,10 +849,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
             if (!b.gone) Art.drawBox(c, b, wd.w, t)
         }
         for (e in wd.enemies) {
-            if (!e.gone) {
-                Art.drawEnemy(c, e.ai, e.spec, e.x, e.y, e.r, t, e.shieldUp, e.flash > 0)
-                Art.drawEnemyHealthBar(c, e.x, e.y, e.r, e.hp, e.maxHp, e.flash > 0)
-            }
+            if (!e.gone) Art.drawEnemy(c, e.ai, e.spec, e.x, e.y, e.r, t, e.shieldUp, e.flash > 0)
         }
         wd.boss?.draw(c, t, wd.elapsed)
         for (m in wd.items) Art.drawItem(c, m.kind, m.x, m.y, 22f, t, txt)

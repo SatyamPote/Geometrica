@@ -21,59 +21,59 @@ data class BossSpecInfo(
 )
 
 val ALL_50_BOSS_SPECS = listOf(
-    // 1..10 (Requires 750 - 900+ bullet hits)
-    BossSpecInfo("prism", "PRISM", "MEDIUM", 26000f, 1, 1, 3), // refracts shots, 3 facets
-    BossSpecInfo("cascade", "CASCADE", "EASY", 24000f, 0, 2, 2), // rhythm gaps
-    BossSpecInfo("gauntlet", "GAUNTLET", "MEDIUM", 28000f, 9, 3, 3), // shifting barrier pairs
-    BossSpecInfo("vortex", "VORTEX", "HARD", 32000f, 5, 4, 3), // gravity pull
-    BossSpecInfo("beacon", "BEACON", "EASY", 25000f, 7, 5, 2), // rotating light beam
-    BossSpecInfo("splitter", "SPLITTER", "HARD", 31000f, 1, 6, 3), // splits into two entities
-    BossSpecInfo("orbit", "ORBIT", "MEDIUM", 29000f, 3, 7, 3), // 8 orbiting shards
-    BossSpecInfo("sawtooth", "SAWTOOTH", "MEDIUM", 29500f, 2, 8, 3), // serrated deflect & pulse
-    BossSpecInfo("tower", "TOWER", "EASY", 25500f, 0, 9, 2), // window cutouts
-    BossSpecInfo("mesh", "MESH", "MEDIUM", 30000f, 4, 10, 3), // wireframe squares
-    // 11..20 (Requires 850 - 1000+ bullet hits)
-    BossSpecInfo("flare", "FLARE", "EASY", 27000f, 1, 11, 2), // swoop attacks
-    BossSpecInfo("delta", "DELTA", "MEDIUM", 32000f, 2, 12, 3), // delta wing spread
-    BossSpecInfo("web", "WEB", "HARD", 36000f, 5, 13, 3), // spiral web retract/extend
-    BossSpecInfo("prismatic", "PRISMATIC", "MEDIUM", 33000f, 4, 14, 3), // swapping segment keys
-    BossSpecInfo("helix", "HELIX", "MEDIUM", 34000f, 6, 15, 3), // corkscrew spiral
-    BossSpecInfo("lockbox", "LOCKBOX", "EASY", 28000f, 0, 16, 2), // opening padlock shackle
-    BossSpecInfo("flareon", "FLAREON", "MEDIUM", 35000f, 2, 17, 3), // shoot/shield mode
-    BossSpecInfo("obsidian", "OBSIDIAN", "HARD", 39000f, 10, 18, 4), // jagged monolith break-off
-    BossSpecInfo("glyph", "GLYPH", "MEDIUM", 35500f, 4, 19, 3), // angular rune matrix
-    BossSpecInfo("siphon", "SIPHON", "MEDIUM", 36500f, 7, 20, 3), // hourglass alternating bulbs
-    // 21..30 (Requires 950 - 1150+ bullet hits)
-    BossSpecInfo("pulse", "PULSE", "EASY", 30000f, 3, 21, 2), // expanding pulse ring
-    BossSpecInfo("spirebreak", "SPIREBREAK", "MEDIUM", 38000f, 7, 22, 3), // falling tower spires
-    BossSpecInfo("facet", "FACET", "MEDIUM", 37500f, 4, 23, 3), // multi-sided rotating face
-    BossSpecInfo("vortex2", "VORTEX II", "HARD", 42000f, 5, 24, 4), // dual counter-rotating vortices
-    BossSpecInfo("cradle", "CRADLE", "EASY", 31000f, 0, 25, 2), // rocking cradle expose core
-    BossSpecInfo("skyline", "SKYLINE", "MEDIUM", 39000f, 9, 26, 3), // skyscraper silhouette row
-    BossSpecInfo("echo", "ECHO", "MEDIUM", 40000f, 1, 27, 3), // boomerang looping return
-    BossSpecInfo("needle", "NEEDLE", "EASY", 32000f, 10, 28, 2), // rapid horizontal oscillation
-    BossSpecInfo("coil", "COIL", "MEDIUM", 41000f, 2, 29, 3), // spring compress & blast
-    BossSpecInfo("sentinel-guard", "SENTINEL-GUARD", "EASY", 33000f, 3, 30, 2), // rotating panels
-    // 31..40 (Requires 1050 - 1300+ bullet hits)
-    BossSpecInfo("rampart", "RAMPART", "MEDIUM", 42000f, 9, 31, 3), // fortified wall shifting crenellations
-    BossSpecInfo("sentinel-core", "SENTINEL-CORE", "MEDIUM", 44000f, 4, 32, 3), // floating hub with accelerating rings
-    BossSpecInfo("havoc", "HAVOC", "HARD", 48000f, 10, 33, 4), // jagged starburst random blasts
-    BossSpecInfo("sentinel-wing", "SENTINEL-WING", "EASY", 34000f, 1, 34, 2), // wind gust projectiles
-    BossSpecInfo("sentinel-tower", "SENTINEL-TOWER", "EASY", 35000f, 0, 35, 2), // command tower with rotating flag
-    BossSpecInfo("cataclysm", "CATACLYSM", "VERY_HARD", 54000f, 3, 36, 4), // mushroom cloud spore burst
-    BossSpecInfo("sentinel-spike", "SENTINEL-SPIKE", "EASY", 36000f, 7, 37, 2), // 360 turret base
-    BossSpecInfo("sentinel-ring", "SENTINEL-RING", "MEDIUM", 46000f, 5, 38, 3), // dual rings & satellites
-    BossSpecInfo("sentinel-cross", "SENTINEL-CROSS", "MEDIUM", 47000f, 4, 39, 3), // cruciform extending arms
-    BossSpecInfo("sentinel-nest", "SENTINEL-NEST", "MEDIUM", 48000f, 8, 40, 3), // pod cluster drone hatch
-    // 41..50 (Requires 1200 - 1600+ bullet hits)
-    BossSpecInfo("dominion", "DOMINION", "VERY_HARD", 58000f, 9, 41, 4), // screen dividing death zones
-    BossSpecInfo("sentinel-web", "SENTINEL-WEB", "HARD", 52000f, 5, 42, 4), // drone web electric lines
-    BossSpecInfo("colossus-prime", "COLOSSUS-PRIME", "VERY_HARD", 65000f, 7, 43, 4), // fortress titan with hanging chains
-    BossSpecInfo("spire-guard", "SPIRE-GUARD", "MEDIUM", 50000f, 4, 44, 3), // diamond spire node shields
-    BossSpecInfo("ring-maiden", "RING-MAIDEN", "MEDIUM", 51000f, 6, 45, 3), // sine-wave whipping ribbons
-    BossSpecInfo("cross-break", "CROSS-BREAK", "HARD", 56000f, 10, 46, 4), // separating & returning cross arms
-    BossSpecInfo("nest-guard", "NEST-GUARD", "HARD", 60000f, 8, 47, 4), // peeling reinforced shell layers
-    BossSpecInfo("ultimate", "ULTIMATE", "FINAL", 85000f, 6, 48, 5), // 3-phase composite sovereign
-    BossSpecInfo("void-walker", "VOID-WALKER", "EASY", 42000f, 0, 49, 2), // intangible phasing entity
-    BossSpecInfo("star-forge", "STAR-FORGE", "MEDIUM", 68000f, 4, 50, 4) // rotating pentagram with orbiting rune stones
+    // 1..10 (Boss 1 = 1,000 hits, Boss 2 = 2,000 hits, then +500 to +1,000 hits each)
+    BossSpecInfo("prism", "PRISM", "MEDIUM", 32000f, 1, 1, 3),            // #1  ~1,000 hits
+    BossSpecInfo("cascade", "CASCADE", "EASY", 60000f, 0, 2, 2),          // #2  ~2,000 hits
+    BossSpecInfo("gauntlet", "GAUNTLET", "MEDIUM", 75000f, 9, 3, 3),      // #3  ~2,500 hits
+    BossSpecInfo("vortex", "VORTEX", "HARD", 90000f, 5, 4, 3),           // #4  ~3,000 hits
+    BossSpecInfo("beacon", "BEACON", "EASY", 105000f, 7, 5, 2),          // #5  ~3,500 hits
+    BossSpecInfo("splitter", "SPLITTER", "HARD", 120000f, 1, 6, 3),       // #6  ~4,000 hits
+    BossSpecInfo("orbit", "ORBIT", "MEDIUM", 135000f, 3, 7, 3),          // #7  ~4,500 hits
+    BossSpecInfo("sawtooth", "SAWTOOTH", "MEDIUM", 150000f, 2, 8, 3),     // #8  ~5,000 hits
+    BossSpecInfo("tower", "TOWER", "EASY", 165000f, 0, 9, 2),             // #9  ~5,500 hits
+    BossSpecInfo("mesh", "MESH", "MEDIUM", 180000f, 4, 10, 3),           // #10 ~6,000 hits
+    // 11..20
+    BossSpecInfo("flare", "FLARE", "EASY", 195000f, 1, 11, 2),           // #11 ~6,500 hits
+    BossSpecInfo("delta", "DELTA", "MEDIUM", 210000f, 2, 12, 3),         // #12 ~7,000 hits
+    BossSpecInfo("web", "WEB", "HARD", 225000f, 5, 13, 3),               // #13 ~7,500 hits
+    BossSpecInfo("prismatic", "PRISMATIC", "MEDIUM", 240000f, 4, 14, 3), // #14 ~8,000 hits
+    BossSpecInfo("helix", "HELIX", "MEDIUM", 255000f, 6, 15, 3),         // #15 ~8,500 hits
+    BossSpecInfo("lockbox", "LOCKBOX", "EASY", 270000f, 0, 16, 2),       // #16 ~9,000 hits
+    BossSpecInfo("flareon", "FLAREON", "MEDIUM", 285000f, 2, 17, 3),     // #17 ~9,500 hits
+    BossSpecInfo("obsidian", "OBSIDIAN", "HARD", 300000f, 10, 18, 4),    // #18 ~10,000 hits
+    BossSpecInfo("glyph", "GLYPH", "MEDIUM", 315000f, 4, 19, 3),         // #19 ~10,500 hits
+    BossSpecInfo("siphon", "SIPHON", "MEDIUM", 330000f, 7, 20, 3),       // #20 ~11,000 hits
+    // 21..30
+    BossSpecInfo("pulse", "PULSE", "EASY", 345000f, 3, 21, 2),           // #21 ~11,500 hits
+    BossSpecInfo("spirebreak", "SPIREBREAK", "MEDIUM", 360000f, 7, 22, 3),// #22 ~12,000 hits
+    BossSpecInfo("facet", "FACET", "MEDIUM", 375000f, 4, 23, 3),         // #23 ~12,500 hits
+    BossSpecInfo("vortex2", "VORTEX II", "HARD", 390000f, 5, 24, 4),     // #24 ~13,000 hits
+    BossSpecInfo("cradle", "CRADLE", "EASY", 405000f, 0, 25, 2),         // #25 ~13,500 hits
+    BossSpecInfo("skyline", "SKYLINE", "MEDIUM", 420000f, 9, 26, 3),     // #26 ~14,000 hits
+    BossSpecInfo("echo", "ECHO", "MEDIUM", 435000f, 1, 27, 3),           // #27 ~14,500 hits
+    BossSpecInfo("needle", "NEEDLE", "EASY", 450000f, 10, 28, 2),        // #28 ~15,000 hits
+    BossSpecInfo("coil", "COIL", "MEDIUM", 465000f, 2, 29, 3),           // #29 ~15,500 hits
+    BossSpecInfo("sentinel-guard", "SENTINEL-GUARD", "EASY", 480000f, 3, 30, 2), // #30 ~16,000 hits
+    // 31..40
+    BossSpecInfo("rampart", "RAMPART", "MEDIUM", 495000f, 9, 31, 3),     // #31 ~16,500 hits
+    BossSpecInfo("sentinel-core", "SENTINEL-CORE", "MEDIUM", 510000f, 4, 32, 3), // #32 ~17,000 hits
+    BossSpecInfo("havoc", "HAVOC", "HARD", 525000f, 10, 33, 4),          // #33 ~17,500 hits
+    BossSpecInfo("sentinel-wing", "SENTINEL-WING", "EASY", 540000f, 1, 34, 2), // #34 ~18,000 hits
+    BossSpecInfo("sentinel-tower", "SENTINEL-TOWER", "EASY", 555000f, 0, 35, 2), // #35 ~18,500 hits
+    BossSpecInfo("cataclysm", "CATACLYSM", "VERY_HARD", 570000f, 3, 36, 4), // #36 ~19,000 hits
+    BossSpecInfo("sentinel-spike", "SENTINEL-SPIKE", "EASY", 585000f, 7, 37, 2), // #37 ~19,500 hits
+    BossSpecInfo("sentinel-ring", "SENTINEL-RING", "MEDIUM", 600000f, 5, 38, 3), // #38 ~20,000 hits
+    BossSpecInfo("sentinel-cross", "SENTINEL-CROSS", "MEDIUM", 615000f, 4, 39, 3), // #39 ~20,500 hits
+    BossSpecInfo("sentinel-nest", "SENTINEL-NEST", "MEDIUM", 630000f, 8, 40, 3), // #40 ~21,000 hits
+    // 41..50
+    BossSpecInfo("dominion", "DOMINION", "VERY_HARD", 645000f, 9, 41, 4), // #41 ~21,500 hits
+    BossSpecInfo("sentinel-web", "SENTINEL-WEB", "HARD", 660000f, 5, 42, 4), // #42 ~22,000 hits
+    BossSpecInfo("colossus-prime", "COLOSSUS-PRIME", "VERY_HARD", 675000f, 7, 43, 4), // #43 ~22,500 hits
+    BossSpecInfo("spire-guard", "SPIRE-GUARD", "MEDIUM", 690000f, 4, 44, 3), // #44 ~23,000 hits
+    BossSpecInfo("ring-maiden", "RING-MAIDEN", "MEDIUM", 705000f, 6, 45, 3), // #45 ~23,500 hits
+    BossSpecInfo("cross-break", "CROSS-BREAK", "HARD", 720000f, 10, 46, 4), // #46 ~24,000 hits
+    BossSpecInfo("nest-guard", "NEST-GUARD", "HARD", 735000f, 8, 47, 4), // #47 ~24,500 hits
+    BossSpecInfo("ultimate", "ULTIMATE", "FINAL", 750000f, 6, 48, 5),   // #48 ~25,000 hits
+    BossSpecInfo("void-walker", "VOID-WALKER", "EASY", 765000f, 0, 49, 2),// #49 ~25,500 hits
+    BossSpecInfo("star-forge", "STAR-FORGE", "MEDIUM", 780000f, 4, 50, 4) // #50 ~26,000 hits
 )

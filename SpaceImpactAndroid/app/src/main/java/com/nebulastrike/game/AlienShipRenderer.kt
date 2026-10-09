@@ -83,11 +83,11 @@ object AlienShipRenderer {
                 c.drawPath(path, fill)
                 c.drawRect(x - s * 0.15f, y - s * 0.15f, x + s * 0.25f, y + s * 0.25f, fill.apply { color = bg })
             }
-            6 -> { // Interlocking angular brackets
-                stroke.strokeWidth = 3f; stroke.color = col
-                c.drawRect(x - s * 0.6f, y - s * 0.6f, x + s * 0.2f, y + s * 0.2f, stroke)
-                c.drawRect(x - s * 0.2f, y - s * 0.2f, x + s * 0.6f, y + s * 0.6f, stroke)
-                c.drawRect(x - s * 0.15f, y - s * 0.15f, x + s * 0.15f, y + s * 0.15f, fill.apply { color = col })
+            6 -> { // Twin-Fuselage Heavy Gunship (pure solid spaceship)
+                c.drawRect(x - s * 0.75f, y - s * 0.9f, x - s * 0.35f, y + s * 0.9f, fill)
+                c.drawRect(x + s * 0.35f, y - s * 0.9f, x + s * 0.75f, y + s * 0.9f, fill)
+                c.drawRect(x - s * 0.35f, y - s * 0.2f, x + s * 0.35f, y + s * 0.2f, fill)
+                c.drawRect(x - s * 0.15f, y - s * 0.15f, x + s * 0.15f, y + s * 0.15f, fill.apply { color = bg })
             }
             7 -> { // Stepped chevron blade
                 path.reset(); path.moveTo(x, y + s * 1.3f)
@@ -128,11 +128,13 @@ object AlienShipRenderer {
                 c.drawRect(x - s * 0.35f, y + s * 0.3f, x + s * 0.35f, y + s * 0.85f, fill)
                 c.drawRect(x - s * 0.12f, y - s * 0.1f, x + s * 0.12f, y + s * 0.1f, fill.apply { color = bg })
             }
-            12 -> { // Dual counter-rotating angular brackets
-                stroke.strokeWidth = 3f; stroke.color = col
-                c.drawRect(x - s * 0.7f, y - s * 0.7f, x + s * 0.7f, y + s * 0.7f, stroke)
-                c.drawRect(x - s * 0.35f, y - s * 0.35f, x + s * 0.35f, y + s * 0.35f, stroke)
-                c.drawRect(x - s * 0.15f, y - s * 0.15f, x + s * 0.15f, y + s * 0.15f, fill.apply { color = col })
+            12 -> { // Delta-V Armor Dreadnought (pure solid polygon)
+                path.reset(); path.moveTo(x, y + s * 1.4f)
+                path.lineTo(x + s * 0.85f, y - s * 0.6f); path.lineTo(x + s * 0.55f, y - s * 0.95f)
+                path.lineTo(x, y - s * 0.4f); path.lineTo(x - s * 0.55f, y - s * 0.95f)
+                path.lineTo(x - s * 0.85f, y - s * 0.6f); path.close()
+                c.drawPath(path, fill)
+                c.drawRect(x - s * 0.2f, y - s * 0.1f, x + s * 0.2f, y + s * 0.3f, fill.apply { color = bg })
             }
             13 -> { // Octagonal Dread Fortress
                 path.reset()
@@ -150,17 +152,11 @@ object AlienShipRenderer {
                 c.drawRect(x - s * 0.2f, y - s * 0.2f, x + s * 0.2f, y + s * 0.2f, fill.apply { color = bg })
             }
         }
-        if (shieldUp) {
-            stroke.strokeWidth = 3f; stroke.color = col
-            // Hexagonal barrier shield instead of circle
-            path.reset()
-            for (i in 0 until 6) {
-                val a = (i * PI / 3).toFloat()
-                val px = x + cos(a) * s * 1.35f; val py = y + sin(a) * s * 1.35f
-                if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-            }
-            path.close()
-            c.drawPath(path, stroke)
+        if (shieldUp && (t / 100) % 2L == 0L) {
+            // Subtle energized wingtip spark dots rather than an outer cage
+            fill.color = col
+            c.drawRect(x - s * 1.15f, y - s * 0.2f, x - s * 0.95f, y + s * 0.2f, fill)
+            c.drawRect(x + s * 0.95f, y - s * 0.2f, x + s * 1.15f, y + s * 0.2f, fill)
         }
     }
 }
