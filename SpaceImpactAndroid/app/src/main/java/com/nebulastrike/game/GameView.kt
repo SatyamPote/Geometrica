@@ -18,7 +18,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     View(context), WorldListener {
 
     companion object {
-        const val BUILD_TAG = "v1.1.3"
+        const val BUILD_TAG = "v1.1.4"
     }
 
     enum class State { TITLE, PLAY, PAUSE, OVER, END, SHOP, SETTINGS, HIGHSCORE, CREDITS }
@@ -91,7 +91,32 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         running = false
         Choreographer.getInstance().removeFrameCallback(frameCb)
         sound.music.stop()
+        sound.on = false
         super.onDetachedFromWindow()
+    }
+
+    fun onPauseGame() {
+        running = false
+        Choreographer.getInstance().removeFrameCallback(frameCb)
+        sound.music.stop()
+        sound.on = false
+        if (state == State.PLAY) {
+            state = State.PAUSE
+            moveId = -1
+            fireIds.clear()
+            world.input.firing = false
+            world.input.clearMove()
+        }
+    }
+
+    fun onResumeGame() {
+        sound.on = save.snd()
+        sound.music.enabled = save.snd()
+        if (!running) {
+            running = true
+            lastFrame = 0L
+            Choreographer.getInstance().postFrameCallback(frameCb)
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -135,6 +160,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
             State.PAUSE -> {
                 sound.click()
                 state = State.PLAY
+                if (save.fx()) sound.music.start(world.boss != null && !world.boss!!.gone)
             }
             else -> {}
         }
@@ -146,6 +172,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         fireIds.clear()
         world.input.firing = false
         world.input.clearMove()
+        sound.music.stop()
     }
 
     // ---------------- input: any touch moves AND fires ----------------
@@ -255,7 +282,9 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                     if (state == State.PAUSE && e.actionMasked == MotionEvent.ACTION_DOWN) {
                         sound.click()
                         if (y > height * 0.42f && y < height * 0.48f) { // 1. Resume
-                            state = State.PLAY; return true
+                            state = State.PLAY
+                            if (save.fx()) sound.music.start(world.boss != null && !world.boss!!.gone)
+                            return true
                         }
                         if (y > height * 0.49f && y < height * 0.55f) { // 2. Settings
                             state = State.SETTINGS; return true
@@ -267,6 +296,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                             state = State.TITLE; sound.music.stop(); return true
                         }
                         state = State.PLAY
+                        if (save.fx()) sound.music.start(world.boss != null && !world.boss!!.gone)
                         return true
                     }
                     pressFire()

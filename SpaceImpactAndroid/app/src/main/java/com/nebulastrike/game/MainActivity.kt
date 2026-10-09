@@ -22,8 +22,22 @@ class MainActivity : Activity() {
         setContentView(gameView)
     }
 
-    override fun onDestroy() {
+    override fun onPause() {
+        gameView?.onPauseGame()
         sound.music.stop()
+        sound.on = false
+        super.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        gameView?.onResumeGame()
+    }
+
+    override fun onDestroy() {
+        gameView?.onPauseGame()
+        sound.music.stop()
+        sound.on = false
         super.onDestroy()
     }
 
