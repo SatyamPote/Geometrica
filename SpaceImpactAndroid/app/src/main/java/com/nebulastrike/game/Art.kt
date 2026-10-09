@@ -50,6 +50,59 @@ object Art {
         c.drawCircle(x, y, r, stroke)
     }
 
+    fun drawPixelatedAnimatedTitle(c: Canvas, text: String, cx: Float, cy: Float, t: Long) {
+        val letterMaps = mapOf(
+            'G' to arrayOf(" ### ", "#   #", "#    ", "# ###", "#   #", "#   #", " ### "),
+            'E' to arrayOf("#####", "#    ", "#    ", "#### ", "#    ", "#    ", "#####"),
+            'O' to arrayOf(" ### ", "#   #", "#   #", "#   #", "#   #", "#   #", " ### "),
+            'M' to arrayOf("#   #", "## ##", "# # #", "#   #", "#   #", "#   #", "#   #"),
+            'T' to arrayOf("#####", "  #  ", "  #  ", "  #  ", "  #  ", "  #  ", "  #  "),
+            'R' to arrayOf("#### ", "#   #", "#   #", "#### ", "#  # ", "#   #", "#   #"),
+            'I' to arrayOf(" ### ", "  #  ", "  #  ", "  #  ", "  #  ", "  #  ", " ### "),
+            'C' to arrayOf(" ### ", "#   #", "#    ", "#    ", "#    ", "#   #", " ### "),
+            'A' to arrayOf(" ### ", "#   #", "#   #", "#####", "#   #", "#   #", "#   #")
+        )
+
+        val pxSize = 7.4f
+        val letterSpacing = 12f
+        val letterW = 5 * pxSize
+        val totalW = text.length * letterW + (text.length - 1) * letterSpacing
+        val startX = cx - totalW / 2f
+
+        for (i in text.indices) {
+            val ch = text[i]
+            val rows = letterMaps[ch] ?: continue
+            val lx = startX + i * (letterW + letterSpacing)
+            val waveY = cy + (kotlin.math.sin(t * 0.0032 + i * 0.46).toFloat() * 12f)
+
+            // Draw Drop Shadow (Pixelated Dark Charcoal Shadow Blocks)
+            fill.color = 0xFF1C2026.toInt()
+            for (r in rows.indices) {
+                val rowStr = rows[r]
+                for (col in rowStr.indices) {
+                    if (rowStr[col] == '#') {
+                        val px = lx + col * pxSize
+                        val py = waveY + r * pxSize
+                        c.drawRect(px + 4f, py + 4f, px + pxSize + 4f, py + pxSize + 4f, fill)
+                    }
+                }
+            }
+
+            // Draw Foreground Pixel Blocks (Crisp Retro Arcade White Blocks)
+            fill.color = WHITE
+            for (r in rows.indices) {
+                val rowStr = rows[r]
+                for (col in rowStr.indices) {
+                    if (rowStr[col] == '#') {
+                        val px = lx + col * pxSize
+                        val py = waveY + r * pxSize
+                        c.drawRect(px, py, px + pxSize - 0.8f, py + pxSize - 0.8f, fill)
+                    }
+                }
+            }
+        }
+    }
+
     // ---------------- player (faces up) ----------------
     fun drawPlayer(c: Canvas, x: Float, y: Float, s: Float, t: Long, blink: Boolean, shipIdx: Int = 0) {
         PlayerShipRenderer.drawShip(c, shipIdx, x, y, s, t, blink)

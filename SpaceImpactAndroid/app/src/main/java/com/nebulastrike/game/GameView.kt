@@ -18,7 +18,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     View(context), WorldListener {
 
     companion object {
-        const val BUILD_TAG = "v1.2.0"
+        const val BUILD_TAG = "v1.3.0"
     }
 
     enum class State { TITLE, PLAY, PAUSE, OVER, END, SHOP, SETTINGS, HIGHSCORE, CREDITS }
@@ -780,7 +780,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     }
 
     private fun drawCredits(c: Canvas, w: Float, h: Float) {
-        centerText(c, "VOID//RUN CREDITS", w / 2f, h * 0.20f, 32f)
+        centerText(c, "GEOMETRICA CREDITS", w / 2f, h * 0.20f, 32f)
         centerText(c, "INSPIRED BY NOKIA 3310", w / 2f, h * 0.32f, 20f)
         centerText(c, "SPACE IMPACT ARCADE", w / 2f, h * 0.37f, 18f)
         txt.color = GRAY
@@ -794,8 +794,8 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     }
 
     private fun drawTitle(c: Canvas, w: Float, h: Float, t: Long) {
-        centerText(c, "VOID//RUN", w / 2f, h * 0.34f, 64f)
-        centerText(c, "HI %06d".format(save.hi()), w / 2f, h * 0.34f + 52f, 20f)
+        Art.drawPixelatedAnimatedTitle(c, "GEOMETRICA", w / 2f, h * 0.24f, t)
+        centerText(c, "HI %06d".format(save.hi()), w / 2f, h * 0.32f, 20f)
         txt.textSize = 13f * resources.displayMetrics.scaledDensity / 2.2f
         txt.color = GRAY
         txt.textAlign = Paint.Align.RIGHT
