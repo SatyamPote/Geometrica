@@ -18,7 +18,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     View(context), WorldListener {
 
     companion object {
-        const val BUILD_TAG = "v1.1.6"
+        const val BUILD_TAG = "v1.2.0"
     }
 
     enum class State { TITLE, PLAY, PAUSE, OVER, END, SHOP, SETTINGS, HIGHSCORE, CREDITS }
@@ -475,30 +475,13 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                 drawWorld(c, t)
                 drawHud(c, w, h)
                 when (state) {
-                    State.PAUSE -> {
-                        centerText(c, "MISSION PAUSED", w / 2f, h * 0.35f, 38f)
-                        txt.color = WHITE
-                        centerText(c, "[ 1. RESUME MISSION ]", w / 2f, h * 0.45f, 22f)
-                        centerText(c, "[ 2. SETTINGS / AUDIO ]", w / 2f, h * 0.52f, 20f)
-                        centerText(c, "[ 3. RESTART RUN ]", w / 2f, h * 0.59f, 20f)
-                        centerText(c, "[ 4. MAIN MENU ]", w / 2f, h * 0.66f, 20f)
-                    }
-                    State.OVER -> {
-                        centerText(c, "SIGNAL LOST", w / 2f, h * 0.36f, 44f)
-                        centerText(c, "SCORE %06d".format(world.score), w / 2f, h * 0.36f + 60f, 24f)
-                        if ((t / 500) % 2L == 0L) centerText(c, "PRESS FIRE", w / 2f, h * 0.36f + 120f, 22f)
-                    }
-                    State.END -> {
-                        centerText(c, "SIGNAL RESTORED", w / 2f, h * 0.3f, 40f)
-                        centerText(c, "TRANSMISSION COMPLETE", w / 2f, h * 0.3f + 56f, 22f)
-                        centerText(c, "THANK YOU FOR PLAYING", w / 2f, h * 0.3f + 100f, 22f)
-                        centerText(c, "SCORE %06d".format(world.score), w / 2f, h * 0.3f + 156f, 22f)
-                        if ((t / 500) % 2L == 0L) centerText(c, "PRESS FIRE", w / 2f, h * 0.3f + 216f, 22f)
-                    }
+                    State.PAUSE -> drawPauseOverlay(c, w, h, t)
+                    State.OVER -> drawGameOverOverlay(c, w, h, t)
+                    State.END -> drawEndOverlay(c, w, h, t)
                     else -> {}
                 }
                 world.warn?.let {
-                    if ((t / 160) % 2L == 0L) centerText(c, "WARNING", w / 2f, h * 0.3f, 40f)
+                    drawBossWarningSplash(c, w, h, t)
                 }
             }
         }
@@ -512,6 +495,173 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         c.drawText(s, x, y, txt)
     }
 
+    private fun drawPauseOverlay(c: Canvas, w: Float, h: Float, t: Long) {
+        fill.color = 0xD9000000.toInt()
+        c.drawRect(0f, 0f, w, h, fill)
+
+        val cardW = w * 0.85f
+        val cardH = h * 0.52f
+        val cx = w / 2f
+        val cy = h * 0.53f
+        val x1 = cx - cardW / 2f
+        val x2 = cx + cardW / 2f
+        val y1 = cy - cardH / 2f
+        val y2 = cy + cardH / 2f
+
+        fill.color = DARK
+        c.drawRect(x1, y1, x2, y2, fill)
+        Art.stroke.color = WHITE
+        Art.stroke.strokeWidth = 3f
+        c.drawRect(x1, y1, x2, y2, Art.stroke)
+
+        // Corner accents
+        c.drawLine(x1 - 6f, y1, x1 + 20f, y1, Art.stroke)
+        c.drawLine(x1, y1 - 6f, x1, y1 + 20f, Art.stroke)
+        c.drawLine(x2 - 20f, y1, x2 + 6f, y1, Art.stroke)
+        c.drawLine(x2, y1 - 6f, x2, y1 + 20f, Art.stroke)
+        c.drawLine(x1 - 6f, y2, x1 + 20f, y2, Art.stroke)
+        c.drawLine(x1, y2 - 20f, x1, y2 + 6f, Art.stroke)
+        c.drawLine(x2 - 20f, y2, x2 + 6f, y2, Art.stroke)
+        c.drawLine(x2, y2 - 20f, x2, y2 + 6f, Art.stroke)
+
+        centerText(c, "MISSION PAUSED", cx, h * 0.35f, 32f)
+        txt.color = GRAY
+        centerText(c, "SYSTEM STATUS: STANDBY", cx, h * 0.39f, 15f)
+
+        fun drawMenuBtn(label: String, btnCenterY: Float) {
+            val bw = cardW * 0.88f
+            val bh = 42f
+            val bx1 = cx - bw / 2f
+            val bx2 = cx + bw / 2f
+            fill.color = BLACK
+            c.drawRect(bx1, btnCenterY - bh / 2f, bx2, btnCenterY + bh / 2f, fill)
+            Art.stroke.color = WHITE
+            Art.stroke.strokeWidth = 2f
+            c.drawRect(bx1, btnCenterY - bh / 2f, bx2, btnCenterY + bh / 2f, Art.stroke)
+            txt.color = WHITE
+            centerText(c, label, cx, btnCenterY + 6f, 18f)
+        }
+
+        drawMenuBtn("[ 1. RESUME FLIGHT ]", h * 0.45f)
+        drawMenuBtn("[ 2. AUDIO SETTINGS ]", h * 0.52f)
+        drawMenuBtn("[ 3. RESTART RUN ]", h * 0.59f)
+        drawMenuBtn("[ 4. MAIN MENU ]", h * 0.66f)
+    }
+
+    private fun drawGameOverOverlay(c: Canvas, w: Float, h: Float, t: Long) {
+        fill.color = 0xDE000000.toInt()
+        c.drawRect(0f, 0f, w, h, fill)
+
+        val cardW = w * 0.88f
+        val cardH = h * 0.58f
+        val cx = w / 2f
+        val cy = h * 0.48f
+        val x1 = cx - cardW / 2f
+        val x2 = cx + cardW / 2f
+        val y1 = cy - cardH / 2f
+        val y2 = cy + cardH / 2f
+
+        fill.color = DARK
+        c.drawRect(x1, y1, x2, y2, fill)
+        Art.stroke.color = WHITE
+        Art.stroke.strokeWidth = 3f
+        c.drawRect(x1, y1, x2, y2, Art.stroke)
+
+        txt.color = WHITE
+        centerText(c, "SIGNAL LOST", cx, h * 0.25f, 36f)
+        txt.color = GRAY
+        centerText(c, "MISSION DEBRIEFING REPORT", cx, h * 0.29f, 16f)
+
+        fun drawStatLine(label: String, value: String, yPos: Float) {
+            txt.textAlign = Paint.Align.LEFT
+            txt.textSize = 15f * resources.displayMetrics.scaledDensity / 2.2f
+            txt.color = GRAY
+            c.drawText(label, x1 + 24f, yPos, txt)
+            txt.textAlign = Paint.Align.RIGHT
+            txt.color = WHITE
+            c.drawText(value, x2 - 24f, yPos, txt)
+            txt.textAlign = Paint.Align.CENTER
+        }
+
+        drawStatLine("FINAL SCORE", "%06d PTS".format(world.score), h * 0.35f)
+        drawStatLine("HIGH SCORE", "%06d PTS".format(save.hi()), h * 0.40f)
+        drawStatLine("HOSTILES DESTROYED", "${world.kills}", h * 0.45f)
+        drawStatLine("BOSSES SLAIN", "${world.bossKills}", h * 0.50f)
+        drawStatLine("CREDITS EARNED", "+${world.runCoins} C", h * 0.55f)
+        drawStatLine("MAX COMBO STREAK", "x${(1 + world.maxStreak / 10).coerceAtMost(5)}", h * 0.60f)
+
+        if ((t / 450) % 2L == 0L) {
+            txt.color = WHITE
+            centerText(c, "[ TAP ANYWHERE TO RETRY ]", cx, h * 0.70f, 20f)
+        }
+    }
+
+    private fun drawEndOverlay(c: Canvas, w: Float, h: Float, t: Long) {
+        fill.color = 0xDE000000.toInt()
+        c.drawRect(0f, 0f, w, h, fill)
+
+        val cardW = w * 0.88f
+        val cardH = h * 0.60f
+        val cx = w / 2f
+        val cy = h * 0.48f
+        val x1 = cx - cardW / 2f
+        val x2 = cx + cardW / 2f
+        val y1 = cy - cardH / 2f
+        val y2 = cy + cardH / 2f
+
+        fill.color = DARK
+        c.drawRect(x1, y1, x2, y2, fill)
+        Art.stroke.color = WHITE
+        Art.stroke.strokeWidth = 3f
+        c.drawRect(x1, y1, x2, y2, Art.stroke)
+
+        txt.color = WHITE
+        centerText(c, "TRANSMISSION COMPLETE", cx, h * 0.24f, 30f)
+        txt.color = GRAY
+        centerText(c, "MISSION ACCOMPLISHED // SECTOR LIBERATED", cx, h * 0.28f, 15f)
+
+        fun drawStatLine(label: String, value: String, yPos: Float) {
+            txt.textAlign = Paint.Align.LEFT
+            txt.textSize = 15f * resources.displayMetrics.scaledDensity / 2.2f
+            txt.color = GRAY
+            c.drawText(label, x1 + 24f, yPos, txt)
+            txt.textAlign = Paint.Align.RIGHT
+            txt.color = WHITE
+            c.drawText(value, x2 - 24f, yPos, txt)
+            txt.textAlign = Paint.Align.CENTER
+        }
+
+        drawStatLine("TOTAL SCORE", "%06d PTS".format(world.score), h * 0.35f)
+        drawStatLine("HIGH SCORE", "%06d PTS".format(save.hi()), h * 0.40f)
+        drawStatLine("HOSTILES DESTROYED", "${world.kills}", h * 0.45f)
+        drawStatLine("BOSSES SLAIN", "${world.bossKills}", h * 0.50f)
+        drawStatLine("TOTAL REWARD", "+${world.runCoins} C", h * 0.55f)
+        drawStatLine("MAX COMBO STREAK", "x${(1 + world.maxStreak / 10).coerceAtMost(5)}", h * 0.60f)
+
+        if ((t / 450) % 2L == 0L) {
+            txt.color = WHITE
+            centerText(c, "[ TAP ANYWHERE TO CONTINUE ]", cx, h * 0.70f, 20f)
+        }
+    }
+
+    private fun drawBossWarningSplash(c: Canvas, w: Float, h: Float, t: Long) {
+        val yPos = h * 0.30f
+        val bannerH = 70f
+
+        fill.color = 0xEE000000.toInt()
+        c.drawRect(0f, yPos - bannerH / 2f, w, yPos + bannerH / 2f, fill)
+        Art.stroke.color = WHITE
+        Art.stroke.strokeWidth = 3f
+        c.drawLine(0f, yPos - bannerH / 2f, w, yPos - bannerH / 2f, Art.stroke)
+        c.drawLine(0f, yPos + bannerH / 2f, w, yPos + bannerH / 2f, Art.stroke)
+
+        if ((t / 140) % 2L == 0L) {
+            txt.color = WHITE
+            centerText(c, "// DANGER // BOSS DETECTED //", w / 2f, yPos + 4f, 24f)
+            txt.color = GRAY
+            centerText(c, "HOSTILE THREAT CLASS DETECTED", w / 2f, yPos + 24f, 14f)
+        }
+    }
 
     private fun drawShop(c: Canvas, w: Float, h: Float, t: Long) {
         centerText(c, "STARSHIP HANGAR & UPGRADES", w / 2f, h * 0.06f, 26f)
@@ -699,7 +849,10 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
             if (!b.gone) Art.drawBox(c, b, wd.w, t)
         }
         for (e in wd.enemies) {
-            if (!e.gone) Art.drawEnemy(c, e.ai, e.spec, e.x, e.y, e.r, t, e.shieldUp, e.flash > 0)
+            if (!e.gone) {
+                Art.drawEnemy(c, e.ai, e.spec, e.x, e.y, e.r, t, e.shieldUp, e.flash > 0)
+                Art.drawEnemyHealthBar(c, e.x, e.y, e.r, e.hp, e.maxHp, e.flash > 0)
+            }
         }
         wd.boss?.draw(c, t, wd.elapsed)
         for (m in wd.items) Art.drawItem(c, m.kind, m.x, m.y, 22f, t, txt)
@@ -742,89 +895,139 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     }
 
     private fun drawHud(c: Canvas, w: Float, h: Float) {
-        txt.textAlign = Paint.Align.LEFT
-        txt.textSize = 26f * resources.displayMetrics.scaledDensity / 2.6f
-        txt.color = WHITE
-        c.drawText("%06d".format(world.score), 18f, 44f, txt)
-        if (world.streak >= 4) {
-            txt.textSize = 16f * resources.displayMetrics.scaledDensity / 2.6f
-            txt.color = GRAY
-            c.drawText("x" + (1 + world.streak / 10).coerceAtMost(5) + " COMBO", 18f, 70f, txt)
-        }
-        txt.textSize = 14f * resources.displayMetrics.scaledDensity / 2.6f
-        txt.color = WHITE
-        c.drawText("${save.coins()} C", 18f, 92f, txt)
-        txt.textAlign = Paint.Align.RIGHT
-        txt.textSize = 14f * resources.displayMetrics.scaledDensity / 2.6f
-        txt.color = GRAY
-        c.drawText("HULL", w - 180f, 22f, txt)
+        val t = SystemClock.uptimeMillis()
         val p = world.player
+
+        // --- TOP LEFT: SCORE, COMBO & ECONOMY ---
+        txt.textAlign = Paint.Align.LEFT
+        txt.textSize = 24f * resources.displayMetrics.scaledDensity / 2.6f
+        txt.color = WHITE
+        c.drawText("%06d".format(world.score), 18f, 40f, txt)
+
+        // Dynamic Combo Multiplier + Decay Gauge
+        if (world.streak >= 2) {
+            val mult = (1 + world.streak / 10).coerceAtMost(5)
+            txt.textSize = 14f * resources.displayMetrics.scaledDensity / 2.6f
+            txt.color = WHITE
+            c.drawText("x$mult COMBO", 18f, 62f, txt)
+
+            // Combo decay progress gauge
+            val comboFrac = (world.streakT / 3.2f).coerceIn(0f, 1f)
+            val barW = 75f
+            val barH = 4f
+            val barX = 18f
+            val barY = 68f
+            fill.color = DARK
+            c.drawRect(barX, barY, barX + barW, barY + barH, fill)
+            Art.stroke.color = GRAY
+            Art.stroke.strokeWidth = 1f
+            c.drawRect(barX, barY, barX + barW, barY + barH, Art.stroke)
+            fill.color = WHITE
+            c.drawRect(barX, barY, barX + barW * comboFrac, barY + barH, fill)
+        }
+
+        // Economy Readout
+        txt.textSize = 13f * resources.displayMetrics.scaledDensity / 2.6f
+        txt.color = GRAY
+        c.drawText("${save.coins()} C  |  ${save.shipParts()} P", 18f, 88f, txt)
+
+        // --- TOP RIGHT: HULL ARMOR CELLS & NRG CAPACITOR ---
+        txt.textAlign = Paint.Align.RIGHT
+        txt.textSize = 13f * resources.displayMetrics.scaledDensity / 2.6f
+        val isLowHp = p.hits <= 2
+        txt.color = if (isLowHp && (t / 200) % 2L == 0L) WHITE else GRAY
+        c.drawText(if (isLowHp) "! HULL !" else "HULL", w - 180f, 22f, txt)
+
         val numPips = 6
         val filledPips = ((p.hits.toFloat() / p.maxHits.coerceAtLeast(1)) * numPips).toInt().coerceIn(0, numPips)
         for (i in 0 until numPips) {
             val bx = w - 24f - (numPips - 1 - i) * 25f
             if (i < filledPips) {
                 fill.color = WHITE
-                c.drawRect(bx - 9f, 10f, bx + 9f, 28f, fill)
+                c.drawRect(bx - 9f, 10f, bx + 9f, 26f, fill)
             } else {
+                fill.color = DARK
+                c.drawRect(bx - 9f, 10f, bx + 9f, 26f, fill)
                 Art.stroke.color = GRAY
-                Art.stroke.strokeWidth = 2f
-                c.drawRect(bx - 9f, 10f, bx + 9f, 28f, Art.stroke)
+                Art.stroke.strokeWidth = 1.5f
+                c.drawRect(bx - 9f, 10f, bx + 9f, 26f, Art.stroke)
             }
         }
 
-        // ENERGY BAR (Gauge underneath Hull, moved down to avoid boss HP bar overlap)
+        // NRG Capacitor Bar
         txt.color = GRAY
         txt.textSize = 13f * resources.displayMetrics.scaledDensity / 2.6f
-        c.drawText("NRG", w - 180f, 64f, txt)
+        c.drawText("NRG", w - 180f, 52f, txt)
         val nrgBarW = 142f
         val nrgBarX = w - 170f
         fill.color = DARK
-        c.drawRect(nrgBarX, 54f, nrgBarX + nrgBarW, 68f, fill)
+        c.drawRect(nrgBarX, 42f, nrgBarX + nrgBarW, 54f, fill)
         Art.stroke.color = WHITE
-        Art.stroke.strokeWidth = 2f
-        c.drawRect(nrgBarX, 54f, nrgBarX + nrgBarW, 68f, Art.stroke)
+        Art.stroke.strokeWidth = 1.5f
+        c.drawRect(nrgBarX, 42f, nrgBarX + nrgBarW, 54f, Art.stroke)
         val nrgFrac = (p.energy / p.maxEnergy.coerceAtLeast(1f)).coerceIn(0f, 1f)
-        fill.color = WHITE
-        c.drawRect(nrgBarX, 54f, nrgBarX + nrgBarW * nrgFrac, 68f, fill)
+        val isFullEnergy = nrgFrac >= 0.98f
+        fill.color = if (isFullEnergy && (t / 250) % 2L == 0L) GRAY else WHITE
+        c.drawRect(nrgBarX, 42f, nrgBarX + nrgBarW * nrgFrac, 54f, fill)
 
+        // Pause Button Hit Area
+        fill.color = DARK
+        c.drawRect(w - 52f, 66f, w - 12f, 96f, fill)
+        Art.stroke.color = GRAY
+        Art.stroke.strokeWidth = 1.5f
+        c.drawRect(w - 52f, 66f, w - 12f, 96f, Art.stroke)
         txt.textAlign = Paint.Align.CENTER
-        txt.textSize = 18f * resources.displayMetrics.scaledDensity / 2.6f
-        txt.color = GRAY
-        c.drawText("II", w - 30f, 85f, txt)
+        txt.textSize = 16f * resources.displayMetrics.scaledDensity / 2.6f
+        txt.color = WHITE
+        c.drawText("II", w - 32f, 88f, txt)
+
+        // --- BOSS HEALTH BAR ---
         val bo = world.boss
         if (bo != null && bo.entered && !bo.gone) {
-            val bw = w * 0.6f
-            val frac = (bo.hp / bo.maxHp).coerceIn(0f, 1f)
-            txt.textSize = 17f * resources.displayMetrics.scaledDensity / 2.6f
-            txt.color = WHITE
-            c.drawText(bo.def.title + "  ${bo.phaseIdx + 1}/${bo.phases.size}", w / 2f, 30f, txt)
+            Art.drawBossHealthBar(
+                c = c,
+                cx = w / 2f,
+                y = dp(24f),
+                w = w,
+                bossTitle = bo.def.title,
+                bossId = bo.def.id,
+                hp = bo.hp,
+                maxHp = bo.maxHp,
+                lagHp = bo.lagHp,
+                curPhase = bo.phaseIdx,
+                totalPhases = bo.phases.size,
+                flash = bo.flash > 0,
+                t = t,
+                txt = txt
+            )
+        }
+
+        // --- BOTTOM POWER-UP COUNTDOWN CHIPS ---
+        var chipX = 20f
+        val chipY = h - 32f
+        val chipH = 26f
+        val chipW = 74f
+
+        fun drawPowerChip(code: String, duration: Float, maxDur: Float) {
+            val frac = (duration / maxDur).coerceIn(0f, 1f)
             fill.color = DARK
-            c.drawRect((w - bw) / 2f, 38f, (w + bw) / 2f, 54f, fill)
+            c.drawRect(chipX, chipY - chipH / 2f, chipX + chipW, chipY + chipH / 2f, fill)
             fill.color = WHITE
-            c.drawRect((w - bw) / 2f, 38f, (w - bw) / 2f + bw * frac, 54f, fill)
+            c.drawRect(chipX, chipY - chipH / 2f, chipX + chipW * frac, chipY + chipH / 2f, fill)
             Art.stroke.color = WHITE
-            Art.stroke.strokeWidth = 3f
-            c.drawRect((w - bw) / 2f, 38f, (w + bw) / 2f, 54f, Art.stroke)
+            Art.stroke.strokeWidth = 2f
+            c.drawRect(chipX, chipY - chipH / 2f, chipX + chipW, chipY + chipH / 2f, Art.stroke)
+
+            txt.textAlign = Paint.Align.CENTER
+            txt.textSize = 12f * resources.displayMetrics.scaledDensity / 2.6f
+            txt.color = if (frac > 0.5f) BLACK else WHITE
+            c.drawText("$code %.1fs".format(duration), chipX + chipW / 2f, chipY + 4f, txt)
+            chipX += chipW + 8f
         }
-        var px = 24f
-        txt.textSize = 16f * resources.displayMetrics.scaledDensity / 2.6f
-        val hh = h - 24f
-        if (p.rapidT > 0) {
-            txt.color = WHITE
-            c.drawText("R", px, hh, txt); px += 28f
-        }
-        if (p.doubleT > 0) {
-            txt.color = WHITE
-            c.drawText("2", px, hh, txt); px += 28f
-        }
-        if (p.spreadT > 0) {
-            txt.color = WHITE
-            c.drawText("S", px, hh, txt); px += 28f
-        }
-        if (p.pierceT > 0) {
-            txt.color = WHITE
-            c.drawText("P", px, hh, txt)
-        }
+
+        if (p.rapidT > 0) drawPowerChip("RAPID", p.rapidT, 12f)
+        if (p.doubleT > 0) drawPowerChip("DUAL", p.doubleT, 12f)
+        if (p.spreadT > 0) drawPowerChip("SPREAD", p.spreadT, 12f)
+        if (p.pierceT > 0) drawPowerChip("PIERCE", p.pierceT, 10f)
     }
 }

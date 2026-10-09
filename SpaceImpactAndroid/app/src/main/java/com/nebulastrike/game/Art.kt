@@ -914,6 +914,98 @@ object Art {
         }
     }
 
+    fun drawEnemyHealthBar(c: Canvas, x: Float, y: Float, r: Float, hp: Float, maxHp: Float, flash: Boolean) {
+        if (hp >= maxHp && maxHp < 40f) return
+        val w = (r * 1.8f).coerceIn(24f, 70f)
+        val h = 4f
+        val bx = x - w / 2f
+        val by = y - r - 8f
+        val frac = (hp / maxHp.coerceAtLeast(1f)).coerceIn(0f, 1f)
+        fill.color = DARK
+        c.drawRect(bx, by, bx + w, by + h, fill)
+        stroke.color = if (flash) WHITE else GRAY
+        stroke.strokeWidth = 1f
+        c.drawRect(bx, by, bx + w, by + h, stroke)
+        fill.color = if (flash) BLACK else WHITE
+        c.drawRect(bx + 1f, by + 1f, bx + 1f + (w - 2f) * frac, by + h - 1f, fill)
+    }
+
+    fun drawBossHealthBar(
+        c: Canvas,
+        cx: Float,
+        y: Float,
+        w: Float,
+        bossTitle: String,
+        bossId: String,
+        hp: Float,
+        maxHp: Float,
+        lagHp: Float,
+        curPhase: Int,
+        totalPhases: Int,
+        flash: Boolean,
+        t: Long,
+        txt: Paint
+    ) {
+        val barW = w * 0.72f
+        val barH = 14f
+        val bx1 = cx - barW / 2f
+        val bx2 = cx + barW / 2f
+        val by1 = y + 16f
+        val by2 = by1 + barH
+        val frac = (hp / maxHp.coerceAtLeast(1f)).coerceIn(0f, 1f)
+        val lagFrac = (lagHp / maxHp.coerceAtLeast(1f)).coerceIn(0f, 1f)
+        val isEnraged = frac < 0.28f || (curPhase >= totalPhases - 1 && totalPhases > 1)
+
+        // 1. Header Text: Boss Title and Phase Indicator
+        txt.textAlign = Paint.Align.CENTER
+        txt.textSize = 14f
+        txt.color = if (flash) BLACK else WHITE
+        val phasePips = (0 until totalPhases).joinToString(" ") { if (it <= curPhase) "◆" else "◇" }
+        c.drawText("[ ${bossTitle.uppercase()} ]  $phasePips", cx, y + 10f, txt)
+
+        // 2. Bar Background Card & Frame
+        fill.color = DARK
+        c.drawRect(bx1 - 4f, by1 - 4f, bx2 + 4f, by2 + 4f, fill)
+        stroke.color = if (isEnraged && (t / 120) % 2L == 0L) WHITE else GRAY
+        stroke.strokeWidth = 2f
+        c.drawRect(bx1 - 4f, by1 - 4f, bx2 + 4f, by2 + 4f, stroke)
+
+        // Chamfered corner accents
+        c.drawLine(bx1 - 8f, by1 - 4f, bx1 - 4f, by1 - 4f, stroke)
+        c.drawLine(bx1 - 4f, by1 - 8f, bx1 - 4f, by1 - 4f, stroke)
+        c.drawLine(bx2 + 8f, by1 - 4f, bx2 + 4f, by1 - 4f, stroke)
+        c.drawLine(bx2 + 4f, by1 - 8f, bx2 + 4f, by1 - 4f, stroke)
+        c.drawLine(bx1 - 8f, by2 + 4f, bx1 - 4f, by2 + 4f, stroke)
+        c.drawLine(bx1 - 4f, by2 + 8f, bx1 - 4f, by2 + 4f, stroke)
+        c.drawLine(bx2 + 8f, by2 + 4f, bx2 + 4f, by2 + 4f, stroke)
+        c.drawLine(bx2 + 4f, by2 + 8f, bx2 + 4f, by2 + 8f, stroke)
+
+        // 3. Lag Fill (Gray trailing bar)
+        if (lagFrac > frac) {
+            fill.color = GRAY
+            c.drawRect(bx1, by1, bx1 + barW * lagFrac, by2, fill)
+        }
+
+        // 4. Primary Active Health Fill
+        fill.color = if (flash) BLACK else WHITE
+        c.drawRect(bx1, by1, bx1 + barW * frac, by2, fill)
+
+        // 5. Phase Divider Ticks
+        stroke.color = BLACK
+        stroke.strokeWidth = 2f
+        for (i in 1 until totalPhases) {
+            val tickX = bx1 + barW * (i.toFloat() / totalPhases)
+            c.drawLine(tickX, by1, tickX, by2, stroke)
+        }
+
+        // 6. Subtitle / Numeric Readout
+        txt.textSize = 10.5f
+        txt.color = if (isEnraged) WHITE else GRAY
+        val hpPct = (frac * 100).toInt()
+        val hpStatus = if (isEnraged) "/// CRITICAL STATE ///" else "THREAT LEVEL: HIGH"
+        c.drawText("$hpStatus  ${hp.toInt()}/${maxHp.toInt()} HP ($hpPct%)", cx, by2 + 13f, txt)
+    }
+
     fun drawWeak(c: Canvas, x: Float, y: Float, r: Float, t: Long) {
         if ((t / 160) % 2L == 0L) {
             stroke.color = WHITE

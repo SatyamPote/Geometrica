@@ -29,6 +29,7 @@ class Phase(
 class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
     var maxHp = 1000f
     var hp = 1000f
+    var lagHp = 1000f
     var x = 0f
     var y = -200f
     var wPx = 300f
@@ -123,6 +124,8 @@ class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
     }
 
     fun onSpawn(world: World) {
+        lagHp = maxHp
+        hp = maxHp
         setupParts(world)
         try {
             phase().enter(this, world)
@@ -141,6 +144,10 @@ class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
         timers = FloatArray(8)
         setupParts(world)
         phase().enter(this, world)
+        // EMP shockwave clears nearby bullets to reward phase transition
+        world.foeShots.removeAll { hypot(it.x - x, it.y - y) < 450f }
+        world.explode(x, y, 32, true)
+        world.addText(x - 130f, y + 40f, "PHASE ADVANCED!")
         world.warn = "WARNING"
         world.warnT = 1.6f
         world.sound.warn()
@@ -154,13 +161,26 @@ class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
         seqIdx = 0
         world.foeShots.clear()
         world.beams.clear()
-        world.addText(x - wPx * 0.3f, y, "HOSTILE DOWN")
+        // Spawn bountiful loot rewards (Coins + Parts)
+        for (i in 0 until 6) {
+            val item = Item()
+            item.kind = if (i == 0) P_PART else if (i == 1) P_COIN_RARE else P_COIN
+            item.x = x + (world.rnd.nextFloat() - 0.5f) * wPx * 0.6f
+            item.y = y + (world.rnd.nextFloat() - 0.5f) * hPx * 0.4f
+            world.items.add(item)
+        }
+        world.addText(x - 140f, y - 20f, "HOSTILE ELIMINATED!")
         world.sound.boom(false)
     }
 
     fun update(dt: Float, world: World, t: Float) {
         if (gone) return
         if (flash > 0) flash -= dt
+        if (lagHp > hp) {
+            lagHp = (lagHp - (lagHp - hp) * 4.5f * dt).coerceAtLeast(hp)
+        } else {
+            lagHp = hp
+        }
         if (dying) {
             deathT -= dt
             boomT -= dt

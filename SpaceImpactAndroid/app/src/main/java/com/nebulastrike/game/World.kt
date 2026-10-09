@@ -398,6 +398,9 @@ class World(val save: Save, val sound: Sound) {
     var score = 0
     var streak = 0
     var streakT = 0f
+    var maxStreak = 0
+    var runCoins = 0
+    var bossKills = 0
     var progress = 0f // hidden 0..1 journey gauge (never displayed)
     var elapsed = 0f
     var shake = 0f
@@ -444,7 +447,8 @@ class World(val save: Save, val sound: Sound) {
         shots.clear(); foeShots.clear(); enemies.clear(); items.clear()
         parts.clear(); texts.clear(); rocks.clear(); boxes.clear(); beams.clear()
         boss = null
-        score = 0; streak = 0; streakT = 0f
+        score = 0; streak = 0; streakT = 0f; maxStreak = 0
+        runCoins = 0; bossKills = 0
         progress = 0f; elapsed = 0f; shake = 0f
         over = false; kills = 0
         spawnT = 2f; boxT = 6f; lullT = 0f; calmClock = 0f
@@ -537,11 +541,13 @@ class World(val save: Save, val sound: Sound) {
         val pts = base * mult
         score += pts
         streak++
-        streakT = 3f
+        if (streak > maxStreak) maxStreak = streak
+        streakT = 3.2f
         addText(x, y, "+$pts")
         // shop-combo-system: combo streak multiplier increases coin drops
         val earnedCoins = (mult * (base / 10).coerceAtLeast(1))
         save.addCoins(earnedCoins)
+        runCoins += earnedCoins
     }
 
     // ---------------- firing ----------------
@@ -1458,6 +1464,7 @@ class World(val save: Save, val sound: Sound) {
         val b = boss
         if (b != null && b.gone) {
             boss = null
+            bossKills++
             progress += 0.008f
             bossGap = 30f // waves breathe at least 30s between bosses
             addScore(b.def.reward, w * 0.5f, h * 0.35f)
