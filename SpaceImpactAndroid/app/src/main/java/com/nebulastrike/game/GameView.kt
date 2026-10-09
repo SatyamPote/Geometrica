@@ -18,15 +18,17 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     View(context), WorldListener {
 
     companion object {
-        const val BUILD_TAG = "v14"
+        const val BUILD_TAG = "v1.1.2"
     }
 
-    enum class State { TITLE, PLAY, PAUSE, OVER, END }
+    enum class State { TITLE, PLAY, PAUSE, OVER, END, SHOP, SETTINGS, HIGHSCORE, CREDITS }
 
     var state = State.TITLE
         private set
 
     private val world = World(save, sound)
+    private var shopFilter = "ALL"
+    private var shopPage = 0
     private val density = resources.displayMetrics.density
     private fun dp(v: Float) = v * density
 
@@ -134,7 +136,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                 sound.click()
                 state = State.PLAY
             }
-            State.PLAY -> {}
+            else -> {}
         }
     }
 
@@ -155,24 +157,116 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 if (state != State.PLAY) {
-                    if (state == State.TITLE && e.actionMasked == MotionEvent.ACTION_DOWN && y > height - dp(90f)) {
-                        if (x < width / 2f) {
-                            save.setSnd(!save.snd())
-                            sound.on = save.snd()
-                            sound.music.enabled = save.snd()
-                        } else {
-                            save.setFx(!save.fx())
+                    if (state == State.TITLE && e.actionMasked == MotionEvent.ACTION_DOWN) {
+                        if (y > height - dp(70f)) {
+                            if (x < width / 2f) {
+                                save.setSnd(!save.snd())
+                                sound.on = save.snd()
+                                sound.music.enabled = save.snd()
+                            } else {
+                                save.setFx(!save.fx())
+                            }
+                            sound.click(); return true
                         }
+                        if (y > height * 0.40f && y < height * 0.58f) {
+                            if (x < width * 0.4f) {
+                                save.setShipIndex((save.shipIndex() - 1 + 100) % 100)
+                            } else {
+                                save.setShipIndex((save.shipIndex() + 1) % 100)
+                            }
+                            sound.click(); return true
+                        }
+                        // Menu button rows
+                        if (y >= height * 0.60f && y < height * 0.68f) {
+                            pressFire(); return true // 1. START
+                        }
+                        if (y >= height * 0.68f && y < height * 0.75f) {
+                            sound.click()
+                            if (x < width / 2f) state = State.SHOP else state = State.SETTINGS
+                            return true
+                        }
+                        if (y >= height * 0.75f && y < height * 0.83f) {
+                            sound.click()
+                            if (x < width / 2f) state = State.HIGHSCORE else state = State.CREDITS
+                            return true
+                        }
+                    }
+                    if ((state == State.SHOP || state == State.SETTINGS || state == State.HIGHSCORE || state == State.CREDITS) && e.actionMasked == MotionEvent.ACTION_DOWN) {
                         sound.click()
+                        if (state == State.SHOP) {
+                            if (y > height * 0.14f && y < height * 0.19f) { // filter category
+                                val cats = arrayOf("ALL", "EASY", "MEDIUM", "HARD", "VERY_HARD", "FINAL", "LEGEND")
+                                val curIdx = cats.indexOf(shopFilter).coerceAtLeast(0)
+                                shopFilter = cats[(curIdx + 1) % cats.size]
+                                return true
+                            }
+                            if (y > height * 0.28f && y < height * 0.36f) { // switch ship
+                                val ships = if (shopFilter == "ALL") ALL_100_PLAYER_SHIPS else ALL_100_PLAYER_SHIPS.filter { it.diff.equals(shopFilter, true) }
+                                if (ships.isNotEmpty()) {
+                                    val curSub = ships.indexOfFirst { it.num == ALL_100_PLAYER_SHIPS[save.shipIndex()].num }.coerceAtLeast(0)
+                                    val nextSub = if (x < width * 0.4f) (curSub - 1 + ships.size) % ships.size else (curSub + 1) % ships.size
+                                    val targetNum = ships[nextSub].num
+                                    save.setShipIndex(targetNum - 1)
+                                }
+                                return true
+                            }
+                            if (y > height * 0.52f && y < height * 0.57f) { // 1. buy pwr upgrade
+                                if (save.coins() >= 1000) { save.addCoins(-1000); save.addUpPwr(1) }
+                                return true
+                            }
+                            if (y > height * 0.57f && y < height * 0.62f) { // 2. buy spd upgrade
+                                if (save.coins() >= 1200) { save.addCoins(-1200); save.addUpSpd(1) }
+                                return true
+                            }
+                            if (y > height * 0.62f && y < height * 0.67f) { // 3. buy dur upgrade
+                                if (save.coins() >= 1300) { save.addCoins(-1300); save.addUpDur(1) }
+                                return true
+                            }
+                            if (y > height * 0.67f && y < height * 0.72f) { // 4. buy hp upgrade
+                                if (save.coins() >= 1500) { save.addCoins(-1500); save.addUpHp(20) }
+                                return true
+                            }
+                            if (y > height * 0.72f && y < height * 0.77f) { // 5. buy skill slot
+                                if (save.coins() >= 2000) { save.addCoins(-2000); save.unlockSkillSlot() }
+                                return true
+                            }
+                            if (y > height * 0.77f && y < height * 0.82f) { // 6. elite all-stats
+                                if (save.coins() >= 3000) { save.addCoins(-3000); save.addUpElite(1) }
+                                return true
+                            }
+                            if (y > height * 0.82f && y < height * 0.88f) { // 7. craft parts
+                                if (save.shipParts() >= 5) { save.addShipPart(-5); save.addCoins(2500) }
+                                return true
+                            }
+                        }
+                        if (state == State.SETTINGS) {
+                            if (y > height * 0.32f && y < height * 0.40f) { save.setSnd(!save.snd()); sound.on = save.snd(); return true }
+                            if (y > height * 0.40f && y < height * 0.48f) { save.setFx(!save.fx()); return true }
+                            if (y > height * 0.48f && y < height * 0.56f) {
+                                if (x < width / 2f) save.setVolume((save.volume() - 0.1f).coerceAtLeast(0.1f))
+                                else save.setVolume((save.volume() + 0.1f).coerceAtMost(1.0f))
+                                return true
+                            }
+                        }
+                        // Return to Title
+                        state = State.TITLE
                         return true
                     }
-                    if (state == State.TITLE && e.actionMasked == MotionEvent.ACTION_DOWN && y > height * 0.40f && y < height * 0.58f) {
-                        if (x < width * 0.4f) {
-                            save.setShipIndex((save.shipIndex() - 1 + 100) % 100)
-                        } else {
-                            save.setShipIndex((save.shipIndex() + 1) % 100)
-                        }
+                    if (state == State.PAUSE && e.actionMasked == MotionEvent.ACTION_DOWN) {
                         sound.click()
+                        if (y > height * 0.42f && y < height * 0.48f) { // 1. Resume
+                            state = State.PLAY; return true
+                        }
+                        if (y > height * 0.49f && y < height * 0.55f) { // 2. Settings
+                            state = State.SETTINGS; return true
+                        }
+                        if (y > height * 0.56f && y < height * 0.62f) { // 3. Restart
+                            pressFire(); return true
+                        }
+                        if (y > height * 0.63f && y < height * 0.70f) { // 4. Main Menu
+                            state = State.TITLE; sound.music.stop(); return true
+                        }
+                        state = State.PLAY
                         return true
                     }
                     pressFire()
@@ -305,32 +399,41 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         fill.color = BLACK
         c.drawRect(0f, 0f, w, h, fill)
         drawStars(c, w, h)
-        if (state == State.TITLE) {
-            drawTitle(c, w, h, t)
-        } else {
-            drawWorld(c, t)
-            drawHud(c, w, h)
-            when (state) {
-                State.PAUSE -> {
-                    centerText(c, "PAUSED", w / 2f, h * 0.42f, 44f)
-                    centerText(c, "PRESS FIRE TO RESUME", w / 2f, h * 0.42f + 60f, 20f)
+        when (state) {
+            State.TITLE -> drawTitle(c, w, h, t)
+            State.SHOP -> drawShop(c, w, h, t)
+            State.SETTINGS -> drawSettings(c, w, h)
+            State.HIGHSCORE -> drawHighscore(c, w, h)
+            State.CREDITS -> drawCredits(c, w, h)
+            else -> {
+                drawWorld(c, t)
+                drawHud(c, w, h)
+                when (state) {
+                    State.PAUSE -> {
+                        centerText(c, "MISSION PAUSED", w / 2f, h * 0.35f, 38f)
+                        txt.color = WHITE
+                        centerText(c, "[ 1. RESUME MISSION ]", w / 2f, h * 0.45f, 22f)
+                        centerText(c, "[ 2. SETTINGS / AUDIO ]", w / 2f, h * 0.52f, 20f)
+                        centerText(c, "[ 3. RESTART RUN ]", w / 2f, h * 0.59f, 20f)
+                        centerText(c, "[ 4. MAIN MENU ]", w / 2f, h * 0.66f, 20f)
+                    }
+                    State.OVER -> {
+                        centerText(c, "SIGNAL LOST", w / 2f, h * 0.36f, 44f)
+                        centerText(c, "SCORE %06d".format(world.score), w / 2f, h * 0.36f + 60f, 24f)
+                        if ((t / 500) % 2L == 0L) centerText(c, "PRESS FIRE", w / 2f, h * 0.36f + 120f, 22f)
+                    }
+                    State.END -> {
+                        centerText(c, "SIGNAL RESTORED", w / 2f, h * 0.3f, 40f)
+                        centerText(c, "TRANSMISSION COMPLETE", w / 2f, h * 0.3f + 56f, 22f)
+                        centerText(c, "THANK YOU FOR PLAYING", w / 2f, h * 0.3f + 100f, 22f)
+                        centerText(c, "SCORE %06d".format(world.score), w / 2f, h * 0.3f + 156f, 22f)
+                        if ((t / 500) % 2L == 0L) centerText(c, "PRESS FIRE", w / 2f, h * 0.3f + 216f, 22f)
+                    }
+                    else -> {}
                 }
-                State.OVER -> {
-                    centerText(c, "SIGNAL LOST", w / 2f, h * 0.36f, 44f)
-                    centerText(c, "SCORE %06d".format(world.score), w / 2f, h * 0.36f + 60f, 24f)
-                    if ((t / 500) % 2L == 0L) centerText(c, "PRESS FIRE", w / 2f, h * 0.36f + 120f, 22f)
+                world.warn?.let {
+                    if ((t / 160) % 2L == 0L) centerText(c, "WARNING", w / 2f, h * 0.3f, 40f)
                 }
-                State.END -> {
-                    centerText(c, "SIGNAL RESTORED", w / 2f, h * 0.3f, 40f)
-                    centerText(c, "TRANSMISSION COMPLETE", w / 2f, h * 0.3f + 56f, 22f)
-                    centerText(c, "THANK YOU FOR PLAYING", w / 2f, h * 0.3f + 100f, 22f)
-                    centerText(c, "SCORE %06d".format(world.score), w / 2f, h * 0.3f + 156f, 22f)
-                    if ((t / 500) % 2L == 0L) centerText(c, "PRESS FIRE", w / 2f, h * 0.3f + 216f, 22f)
-                }
-                else -> {}
-            }
-            world.warn?.let {
-                if ((t / 160) % 2L == 0L) centerText(c, "WARNING", w / 2f, h * 0.3f, 40f)
             }
         }
         c.restore()
@@ -343,6 +446,87 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         c.drawText(s, x, y, txt)
     }
 
+
+    private fun drawShop(c: Canvas, w: Float, h: Float, t: Long) {
+        centerText(c, "SHIP HANGAR & UPGRADE SHOP", w / 2f, h * 0.08f, 26f)
+        val curShip = ALL_100_PLAYER_SHIPS[save.shipIndex()]
+        val coins = save.coins()
+        txt.color = WHITE
+        centerText(c, "BANK: $coins COINS  |  PARTS: ${save.shipParts()}", w / 2f, h * 0.12f, 18f)
+
+        // Category filter bar
+        txt.color = GRAY
+        centerText(c, "< CATEGORY: $shopFilter >", w / 2f, h * 0.16f, 17f)
+
+        // Display current ship
+        Art.drawPlayer(c, w / 2f, h * 0.25f, 42f, t, false, save.shipIndex())
+        txt.color = WHITE
+        centerText(c, "<  #${curShip.num}: ${curShip.name.uppercase()}  >", w / 2f, h * 0.32f, 20f)
+        txt.color = GRAY
+        centerText(c, "TIER: ${curShip.diff}  COST: ${curShip.cost} C", w / 2f, h * 0.36f, 16f)
+        val pwrTotal = curShip.power + save.upPwr() + save.upElite()
+        val spdTotal = curShip.speed + save.upSpd() + save.upElite()
+        val durTotal = curShip.durability + save.upDur() + save.upElite()
+        val hpTotal = curShip.health + save.upHp() + save.upElite() * 20
+        centerText(c, "PWR: $pwrTotal (+${save.upPwr()})  SPD: $spdTotal (+${save.upSpd()})  DUR: $durTotal", w / 2f, h * 0.40f, 15f)
+        centerText(c, "HULL HP: $hpTotal  SLOTS: ${save.upSkillSlots()}/4", w / 2f, h * 0.44f, 15f)
+        txt.color = WHITE
+        centerText(c, "SKILL: [${curShip.skill.uppercase()}]", w / 2f, h * 0.48f, 16f)
+
+        // Upgrade Buttons
+        txt.color = WHITE
+        centerText(c, "[ 1. UPGRADE POWER +1 (1000 C) ]", w / 2f, h * 0.54f, 16f)
+        centerText(c, "[ 2. UPGRADE SPEED +1 (1200 C) ]", w / 2f, h * 0.59f, 16f)
+        centerText(c, "[ 3. UPGRADE DURABILITY +1 (1300 C) ]", w / 2f, h * 0.64f, 16f)
+        centerText(c, "[ 4. UPGRADE HEALTH +20 (1500 C) ]", w / 2f, h * 0.69f, 16f)
+        centerText(c, "[ 5. UNLOCK SKILL SLOT (2000 C) ]", w / 2f, h * 0.74f, 16f)
+        centerText(c, "[ 6. ELITE ALL-STATS +1 (3000 C) ]", w / 2f, h * 0.79f, 16f)
+        centerText(c, "[ 7. CRAFT PART REWARD (5 PARTS) ]", w / 2f, h * 0.84f, 16f)
+
+        txt.color = GRAY
+        centerText(c, "< TAP BOTTOM TO RETURN TO MENU >", w / 2f, h * 0.93f, 16f)
+    }
+
+    private fun drawSettings(c: Canvas, w: Float, h: Float) {
+        centerText(c, "SETTINGS", w / 2f, h * 0.22f, 36f)
+        centerText(c, "SND (SFX): " + if (save.snd()) "ON" else "OFF", w / 2f, h * 0.36f, 24f)
+        centerText(c, "FX (MUSIC): " + if (save.fx()) "ON" else "OFF", w / 2f, h * 0.44f, 24f)
+        val volPct = (save.volume() * 100).toInt()
+        centerText(c, "VOLUME: [ - ] $volPct% [ + ]", w / 2f, h * 0.52f, 24f)
+        centerText(c, "DISPLAY: MONOCHROME CRT", w / 2f, h * 0.60f, 20f)
+        centerText(c, "ORIENTATION: PORTRAIT", w / 2f, h * 0.66f, 20f)
+
+        txt.color = GRAY
+        centerText(c, "< TAP BOTTOM TO RETURN >", w / 2f, h * 0.85f, 18f)
+    }
+
+    private fun drawHighscore(c: Canvas, w: Float, h: Float) {
+        centerText(c, "HALL OF FAME", w / 2f, h * 0.22f, 36f)
+        val hi = save.hi()
+        centerText(c, "RANK 1: %06d PTS".format(hi), w / 2f, h * 0.36f, 24f)
+        centerText(c, "RANK 2: %06d PTS".format((hi * 0.75).toInt()), w / 2f, h * 0.43f, 20f)
+        centerText(c, "RANK 3: %06d PTS".format((hi * 0.55).toInt()), w / 2f, h * 0.49f, 20f)
+        centerText(c, "RANK 4: %06d PTS".format((hi * 0.35).toInt()), w / 2f, h * 0.55f, 20f)
+        centerText(c, "RANK 5: %06d PTS".format((hi * 0.20).toInt()), w / 2f, h * 0.61f, 20f)
+
+        txt.color = GRAY
+        centerText(c, "< TAP BOTTOM TO RETURN >", w / 2f, h * 0.85f, 18f)
+    }
+
+    private fun drawCredits(c: Canvas, w: Float, h: Float) {
+        centerText(c, "VOID//RUN CREDITS", w / 2f, h * 0.20f, 32f)
+        centerText(c, "INSPIRED BY NOKIA 3310", w / 2f, h * 0.32f, 20f)
+        centerText(c, "SPACE IMPACT ARCADE", w / 2f, h * 0.37f, 18f)
+        txt.color = GRAY
+        centerText(c, "100 ALIEN ENEMY SHIPS", w / 2f, h * 0.46f, 18f)
+        centerText(c, "100 PLAYER STARSHIPS", w / 2f, h * 0.51f, 18f)
+        centerText(c, "50 HANDCRAFTED SKILL BOSSES", w / 2f, h * 0.56f, 18f)
+        centerText(c, "GEOMETRICA RETRO ENGINE", w / 2f, h * 0.63f, 18f)
+        centerText(c, "DEVELOPED FOR ANDROID", w / 2f, h * 0.68f, 18f)
+
+        centerText(c, "< TAP BOTTOM TO RETURN >", w / 2f, h * 0.85f, 18f)
+    }
+
     private fun drawTitle(c: Canvas, w: Float, h: Float, t: Long) {
         centerText(c, "VOID//RUN", w / 2f, h * 0.34f, 64f)
         centerText(c, "HI %06d".format(save.hi()), w / 2f, h * 0.34f + 52f, 20f)
@@ -351,11 +535,13 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         txt.textAlign = Paint.Align.RIGHT
         c.drawText(BUILD_TAG, w - 24f, 34f, txt)
         txt.textAlign = Paint.Align.CENTER
-        if ((t / 500) % 2L == 0L) centerText(c, "PRESS FIRE", w / 2f, h * 0.62f, 26f)
+        if ((t / 500) % 2L == 0L) centerText(c, "[ 1. START RUN ]", w / 2f, h * 0.64f, 24f)
+        centerText(c, "[ 2. SHOP ]     [ 3. SETTINGS ]", w / 2f, h * 0.72f, 19f)
+        centerText(c, "[ 4. HIGHSCORE ]  [ 5. CREDITS ]", w / 2f, h * 0.78f, 19f)
         txt.textSize = 15f * resources.displayMetrics.scaledDensity / 2.2f
         txt.color = GRAY
-        c.drawText("SND " + if (save.snd()) "ON" else "OFF", w * 0.25f, h - 40f, txt)
-        c.drawText("FX " + if (save.fx()) "ON" else "OFF", w * 0.75f, h - 40f, txt)
+        c.drawText("SND " + if (save.snd()) "ON" else "OFF", w * 0.25f, h - 35f, txt)
+        c.drawText("FX " + if (save.fx()) "ON" else "OFF", w * 0.75f, h - 35f, txt)
 
         // Hangar Ship Selector
         val curShip = ALL_100_PLAYER_SHIPS[save.shipIndex()]
@@ -438,11 +624,14 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         txt.textSize = 26f * resources.displayMetrics.scaledDensity / 2.6f
         txt.color = WHITE
         c.drawText("%06d".format(world.score), 18f, 44f, txt)
-        if (world.streak >= 8) {
+        if (world.streak >= 4) {
             txt.textSize = 16f * resources.displayMetrics.scaledDensity / 2.6f
             txt.color = GRAY
-            c.drawText("x" + (1 + world.streak / 10).coerceAtMost(5), 18f, 70f, txt)
+            c.drawText("x" + (1 + world.streak / 10).coerceAtMost(5) + " COMBO", 18f, 70f, txt)
         }
+        txt.textSize = 14f * resources.displayMetrics.scaledDensity / 2.6f
+        txt.color = WHITE
+        c.drawText("${save.coins()} C", 18f, 92f, txt)
         txt.textAlign = Paint.Align.CENTER
         txt.textSize = 15f * resources.displayMetrics.scaledDensity / 2.6f
         txt.color = GRAY

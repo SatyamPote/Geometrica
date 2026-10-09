@@ -40,110 +40,110 @@ data class EnemySpec(
 
 /** Exactly 50 distinct enemy planes, ordered easy -> brutal. */
 val ENEMY_ROSTER = listOf(
-    EnemySpec("drift-01", AI_DRIFT, 18.0f, 1.0f, 16.0f, 100, 2.5f, 0.0f, 0.0f, -1, "sway-shot"),
-    EnemySpec("drift-02", AI_DRIFT, 18.0f, 1.0f, 17.5f, 105, 2.5f, 0.0f, 0.0f, -1, "zigzag"),
-    EnemySpec("drift-03", AI_DRIFT, 32.4f, 1.15f, 19.0f, 210, 2.17f, 0.0f, 0.0f, -1, "reflector"),
-    EnemySpec("track-01", AI_TRACK, 32.4f, 1.15f, 20.5f, 215, 2.17f, 0.0f, 0.0f, -1, "lead-shot"),
-    EnemySpec("track-02", AI_TRACK, 50.4f, 1.3f, 22.0f, 370, 1.92f, 0.0f, 0.0f, -1, "homing"),
-    EnemySpec("track-03", AI_TRACK, 72.0f, 1.45f, 23.5f, 575, 1.72f, 0.0f, 0.0f, -1, "predict"),
-    EnemySpec("dive-01", AI_DIVE, 18.0f, 1.0f, 16.0f, 130, 2.5f, 0.0f, 0.0f, -1, "drop-shot"),
-    EnemySpec("dive-02", AI_DIVE, 32.4f, 1.15f, 17.5f, 235, 2.17f, 0.0f, 0.0f, -1, "dive-bomb"),
-    EnemySpec("dive-03", AI_DIVE, 50.4f, 1.3f, 19.0f, 390, 1.92f, 0.0f, 0.0f, -1, "dive-loop"),
-    EnemySpec("weave-01", AI_WEAVE, 32.4f, 1.15f, 20.5f, 245, 2.17f, 0.0f, 0.0f, -1, "pattern"),
-    EnemySpec("weave-02", AI_WEAVE, 50.4f, 1.3f, 22.0f, 400, 1.92f, 0.0f, 0.0f, -1, "adaptive-weave"),
-    EnemySpec("weave-03", AI_WEAVE, 72.0f, 1.45f, 23.5f, 605, 1.72f, 0.0f, 0.0f, -1, "random-weave"),
-    EnemySpec("gun-01", AI_GUN, 32.4f, 1.15f, 16.0f, 260, 2.17f, 2.0f, 0.0f, -1, "burst"),
-    EnemySpec("gun-02", AI_GUN, 50.4f, 1.3f, 17.5f, 415, 1.92f, 3.0f, 0.0f, -1, "spread"),
-    EnemySpec("gun-03", AI_GUN, 117.0f, 1.6f, 19.0f, 970, 1.56f, 3.0f, 0.0f, -1, "laser"),
-    EnemySpec("burst-01", AI_BURST, 18.0f, 1.0f, 20.5f, 175, 2.5f, 4.0f, 0.0f, -1, "cluster"),
-    EnemySpec("burst-02", AI_BURST, 32.4f, 1.15f, 22.0f, 280, 2.17f, 4.0f, 0.0f, -1, "radius"),
-    EnemySpec("burst-03", AI_BURST, 50.4f, 1.3f, 23.5f, 435, 1.92f, 4.0f, 0.0f, -1, "homing-burst"),
-    EnemySpec("spiral-01", AI_SPIRAL, 32.4f, 1.15f, 16.0f, 290, 2.17f, 8.0f, 0.0f, -1, "expand"),
-    EnemySpec("spiral-02", AI_SPIRAL, 50.4f, 1.3f, 17.5f, 445, 1.92f, 8.0f, 0.0f, -1, "contract"),
-    EnemySpec("spiral-03", AI_SPIRAL, 72.0f, 1.45f, 19.0f, 650, 1.72f, 8.0f, 0.0f, -1, "interlock"),
-    EnemySpec("shield-01", AI_SHIELD, 32.4f, 1.15f, 20.5f, 305, 2.17f, 2.0f, 1.0f, -1, "regen"),
-    EnemySpec("shield-02", AI_SHIELD, 50.4f, 1.3f, 22.0f, 460, 1.92f, 2.0f, 1.0f, -1, "drain"),
-    EnemySpec("shield-03", AI_SHIELD, 72.0f, 1.45f, 23.5f, 665, 1.72f, 2.0f, 1.0f, -1, "invuln"),
-    EnemySpec("kami-01", AI_KAMI, 18.0f, 1.0f, 16.0f, 220, 2.5f, 0.0f, 0.0f, -1, "crash"),
-    EnemySpec("kami-02", AI_KAMI, 32.4f, 1.15f, 17.5f, 325, 2.17f, 0.0f, 0.0f, -1, "suicide-run"),
-    EnemySpec("kami-03", AI_KAMI, 50.4f, 1.3f, 19.0f, 480, 1.92f, 0.0f, 0.0f, -1, "swarm"),
-    EnemySpec("sniper-01", AI_SNIPER, 32.4f, 1.15f, 20.5f, 335, 2.17f, 0.0f, 0.0f, -1, "weak-point"),
-    EnemySpec("sniper-02", AI_SNIPER, 50.4f, 1.3f, 22.0f, 490, 1.92f, 0.0f, 0.0f, -1, "predict-lead"),
-    EnemySpec("sniper-03", AI_SNIPER, 117.0f, 1.6f, 23.5f, 1045, 1.56f, 0.0f, 0.0f, -1, "one-shot"),
-    EnemySpec("split-01", AI_SPLIT, 32.4f, 1.15f, 16.0f, 350, 2.17f, 2.0f, 0.0f, 31, "duplicate"),
-    EnemySpec("split-02", AI_SPLIT, 50.4f, 1.3f, 17.5f, 505, 1.92f, 2.0f, 0.0f, 32, "tri-clone"),
-    EnemySpec("split-03", AI_SPLIT, 117.0f, 1.6f, 19.0f, 1060, 1.56f, 2.0f, 0.0f, 33, "quad-clone"),
-    EnemySpec("strafe-01", AI_STRAFE, 32.4f, 1.15f, 20.5f, 365, 2.17f, 0.0f, 0.0f, -1, "sweep"),
-    EnemySpec("strafe-02", AI_STRAFE, 50.4f, 1.3f, 22.0f, 520, 1.92f, 0.0f, 0.0f, -1, "dual-sweep"),
-    EnemySpec("strafe-03", AI_STRAFE, 72.0f, 1.45f, 23.5f, 725, 1.72f, 0.0f, 0.0f, -1, "random-sweep"),
-    EnemySpec("drift-04", AI_DRIFT, 32.4f, 1.15f, 16.0f, 380, 2.17f, 0.0f, 0.0f, -1, "diagonal-sway"),
-    EnemySpec("drift-05", AI_DRIFT, 50.4f, 1.3f, 17.5f, 535, 1.92f, 0.0f, 0.0f, -1, "rapid-diagonal"),
-    EnemySpec("track-04", AI_TRACK, 32.4f, 1.15f, 19.0f, 390, 2.17f, 0.0f, 0.0f, -1, "slow-learn"),
-    EnemySpec("dive-04", AI_DIVE, 32.4f, 1.15f, 20.5f, 395, 2.17f, 0.0f, 0.0f, -1, "side-dive"),
-    EnemySpec("weave-04", AI_WEAVE, 32.4f, 1.15f, 22.0f, 400, 2.17f, 0.0f, 0.0f, -1, "column-weave"),
-    EnemySpec("gun-04", AI_GUN, 32.4f, 1.15f, 23.5f, 405, 2.17f, 2.0f, 0.0f, -1, "bank-shot"),
-    EnemySpec("burst-04", AI_BURST, 32.4f, 1.15f, 16.0f, 410, 2.17f, 4.0f, 0.0f, -1, "split-burst"),
-    EnemySpec("spiral-04", AI_SPIRAL, 32.4f, 1.15f, 17.5f, 415, 2.17f, 8.0f, 0.0f, -1, "gap-spiral"),
-    EnemySpec("shield-04", AI_SHIELD, 32.4f, 1.15f, 19.0f, 420, 2.17f, 2.0f, 1.0f, -1, "moving-shield"),
-    EnemySpec("kami-04", AI_KAMI, 32.4f, 1.15f, 20.5f, 425, 2.17f, 0.0f, 0.0f, -1, "decoy"),
-    EnemySpec("sniper-04", AI_SNIPER, 32.4f, 1.15f, 22.0f, 430, 2.17f, 0.0f, 0.0f, -1, "clear-indicator"),
-    EnemySpec("split-04", AI_SPLIT, 32.4f, 1.15f, 23.5f, 435, 2.17f, 2.0f, 0.0f, 48, "long-split"),
-    EnemySpec("strafe-04", AI_STRAFE, 32.4f, 1.15f, 16.0f, 440, 2.17f, 0.0f, 0.0f, -1, "gap-strafe"),
-    EnemySpec("drift-06", AI_DRIFT, 50.4f, 1.3f, 17.5f, 595, 1.92f, 0.0f, 0.0f, -1, "speed-drift"),
-    EnemySpec("track-05", AI_TRACK, 18.0f, 1.0f, 19.0f, 350, 2.5f, 0.0f, 0.0f, -1, "-basic-track"),
-    EnemySpec("dive-05", AI_DIVE, 18.0f, 1.0f, 20.5f, 355, 2.5f, 0.0f, 0.0f, -1, "slow-dive"),
-    EnemySpec("weave-05", AI_WEAVE, 18.0f, 1.0f, 22.0f, 360, 2.5f, 0.0f, 0.0f, -1, "slow-weave"),
-    EnemySpec("gun-05", AI_GUN, 18.0f, 1.0f, 23.5f, 365, 2.5f, 2.0f, 0.0f, -1, "slow-gun"),
-    EnemySpec("burst-05", AI_BURST, 18.0f, 1.0f, 16.0f, 370, 2.5f, 4.0f, 0.0f, -1, "slow-burst"),
-    EnemySpec("spiral-05", AI_SPIRAL, 18.0f, 1.0f, 17.5f, 375, 2.5f, 8.0f, 0.0f, -1, "slow-spiral"),
-    EnemySpec("shield-05", AI_SHIELD, 18.0f, 1.0f, 19.0f, 380, 2.5f, 2.0f, 1.0f, -1, "easy-shield"),
-    EnemySpec("kami-05", AI_KAMI, 18.0f, 1.0f, 20.5f, 385, 2.5f, 0.0f, 0.0f, -1, "slow-dive"),
-    EnemySpec("sniper-05", AI_SNIPER, 18.0f, 1.0f, 22.0f, 390, 2.5f, 0.0f, 0.0f, -1, "easy-sniper"),
-    EnemySpec("split-05", AI_SPLIT, 18.0f, 1.0f, 23.5f, 395, 2.5f, 2.0f, 0.0f, 60, "easy-split"),
-    EnemySpec("strafe-05", AI_STRAFE, 18.0f, 1.0f, 16.0f, 400, 2.5f, 0.0f, 0.0f, -1, "slow-sweep"),
-    EnemySpec("drift-07", AI_DRIFT, 50.4f, 1.3f, 17.5f, 655, 1.92f, 0.0f, 0.0f, -1, "random-drift"),
-    EnemySpec("track-06", AI_TRACK, 50.4f, 1.3f, 19.0f, 660, 1.92f, 0.0f, 0.0f, -1, "instant-track"),
-    EnemySpec("dive-06", AI_DIVE, 50.4f, 1.3f, 20.5f, 665, 1.92f, 0.0f, 0.0f, -1, "fast-dive"),
-    EnemySpec("weave-06", AI_WEAVE, 50.4f, 1.3f, 22.0f, 670, 1.92f, 0.0f, 0.0f, -1, "rapid-weave"),
-    EnemySpec("gun-06", AI_GUN, 50.4f, 1.3f, 23.5f, 675, 1.92f, 3.0f, 0.0f, -1, "rapid-gun"),
-    EnemySpec("burst-06", AI_BURST, 50.4f, 1.3f, 16.0f, 680, 1.92f, 4.0f, 0.0f, -1, "fast-burst"),
-    EnemySpec("spiral-06", AI_SPIRAL, 50.4f, 1.3f, 17.5f, 685, 1.92f, 8.0f, 0.0f, -1, "fast-spiral"),
-    EnemySpec("shield-06", AI_SHIELD, 50.4f, 1.3f, 19.0f, 690, 1.92f, 2.0f, 1.0f, -1, "strong-shield"),
-    EnemySpec("kami-06", AI_KAMI, 50.4f, 1.3f, 20.5f, 695, 1.92f, 0.0f, 0.0f, -1, "kamikaze-speed"),
-    EnemySpec("sniper-06", AI_SNIPER, 50.4f, 1.3f, 22.0f, 700, 1.92f, 0.0f, 0.0f, -1, "fast-sniper"),
-    EnemySpec("split-06", AI_SPLIT, 50.4f, 1.3f, 23.5f, 705, 1.92f, 2.0f, 0.0f, 72, "fast-split"),
-    EnemySpec("strafe-06", AI_STRAFE, 50.4f, 1.3f, 16.0f, 710, 1.92f, 0.0f, 0.0f, -1, "fast-sweep"),
-    EnemySpec("drift-08", AI_DRIFT, 72.0f, 1.45f, 17.5f, 915, 1.72f, 0.0f, 0.0f, -1, "chaos-drift"),
-    EnemySpec("track-07", AI_TRACK, 72.0f, 1.45f, 19.0f, 920, 1.72f, 0.0f, 0.0f, -1, "track-shoot"),
-    EnemySpec("dive-07", AI_DIVE, 72.0f, 1.45f, 20.5f, 925, 1.72f, 0.0f, 0.0f, -1, "multidive"),
-    EnemySpec("weave-07", AI_WEAVE, 72.0f, 1.45f, 22.0f, 930, 1.72f, 0.0f, 0.0f, -1, "complex-weave"),
-    EnemySpec("gun-07", AI_GUN, 72.0f, 1.45f, 23.5f, 935, 1.72f, 3.0f, 0.0f, -1, "spread-rapid"),
-    EnemySpec("burst-07", AI_BURST, 72.0f, 1.45f, 16.0f, 940, 1.72f, 4.0f, 0.0f, -1, "homing-burst-track"),
-    EnemySpec("spiral-07", AI_SPIRAL, 72.0f, 1.45f, 17.5f, 945, 1.72f, 8.0f, 0.0f, -1, "dual-spiral"),
-    EnemySpec("shield-07", AI_SHIELD, 72.0f, 1.45f, 19.0f, 950, 1.72f, 2.0f, 1.0f, -1, "triple-shield"),
-    EnemySpec("kami-07", AI_KAMI, 72.0f, 1.45f, 20.5f, 955, 1.72f, 0.0f, 0.0f, -1, "kamikaze-swarm"),
-    EnemySpec("sniper-07", AI_SNIPER, 72.0f, 1.45f, 22.0f, 960, 1.72f, 0.0f, 0.0f, -1, "piercing-sniper"),
-    EnemySpec("split-07", AI_SPLIT, 72.0f, 1.45f, 23.5f, 965, 1.72f, 2.0f, 0.0f, 84, "quad-split"),
-    EnemySpec("strafe-07", AI_STRAFE, 72.0f, 1.45f, 16.0f, 970, 1.72f, 0.0f, 0.0f, -1, "random-strafe"),
-    EnemySpec("drift-09", AI_DRIFT, 117.0f, 1.6f, 17.5f, 1325, 1.56f, 0.0f, 0.0f, -1, "boss-drift"),
-    EnemySpec("track-08", AI_TRACK, 117.0f, 1.6f, 19.0f, 1330, 1.56f, 0.0f, 0.0f, -1, "boss-track"),
-    EnemySpec("dive-08", AI_DIVE, 117.0f, 1.6f, 20.5f, 1335, 1.56f, 0.0f, 0.0f, -1, "boss-dive"),
-    EnemySpec("weave-08", AI_WEAVE, 117.0f, 1.6f, 22.0f, 1340, 1.56f, 0.0f, 0.0f, -1, "boss-weave"),
-    EnemySpec("gun-08", AI_GUN, 117.0f, 1.6f, 23.5f, 1345, 1.56f, 3.0f, 0.0f, -1, "boss-gun"),
-    EnemySpec("burst-08", AI_BURST, 117.0f, 1.6f, 16.0f, 1350, 1.56f, 4.0f, 0.0f, -1, "boss-burst"),
-    EnemySpec("spiral-08", AI_SPIRAL, 117.0f, 1.6f, 17.5f, 1355, 1.56f, 8.0f, 0.0f, -1, "boss-spiral"),
-    EnemySpec("shield-08", AI_SHIELD, 117.0f, 1.6f, 19.0f, 1360, 1.56f, 2.0f, 1.0f, -1, "boss-shield"),
-    EnemySpec("kami-08", AI_KAMI, 117.0f, 1.6f, 20.5f, 1365, 1.56f, 0.0f, 0.0f, -1, "boss-kami"),
-    EnemySpec("sniper-08", AI_SNIPER, 117.0f, 1.6f, 22.0f, 1370, 1.56f, 0.0f, 0.0f, -1, "boss-sniper"),
-    EnemySpec("split-08", AI_SPLIT, 117.0f, 1.6f, 23.5f, 1375, 1.56f, 2.0f, 0.0f, 96, "boss-split"),
-    EnemySpec("strafe-08", AI_STRAFE, 117.0f, 1.6f, 16.0f, 1380, 1.56f, 0.0f, 0.0f, -1, "boss-strafe"),
-    EnemySpec("drift-10", AI_DRIFT, 63.0f, 1.35f, 17.5f, 935, 1.85f, 0.0f, 0.0f, -1, "custom-drift"),
-    EnemySpec("track-09", AI_TRACK, 63.0f, 1.35f, 19.0f, 940, 1.85f, 0.0f, 0.0f, -1, "custom-track"),
-    EnemySpec("dive-10", AI_DIVE, 63.0f, 1.35f, 20.5f, 945, 1.85f, 0.0f, 0.0f, -1, "custom-dive"),
+    EnemySpec("drift-dia01", AI_DRIFT, 16.0f, 1.0f, 16.0f, 100, 2.5f, 0.0f, 0.0f, -1, "sway-shot"),
+    EnemySpec("drift-boom02", AI_DRIFT, 16.0f, 1.0f, 17.5f, 105, 2.5f, 0.0f, 0.0f, -1, "boomerang-weave"),
+    EnemySpec("drift-pent03", AI_DRIFT, 28.8f, 1.15f, 19.0f, 210, 2.17f, 0.0f, 0.0f, -1, "rotating-edges"),
+    EnemySpec("drift-hex04", AI_DRIFT, 28.8f, 1.15f, 20.5f, 215, 2.17f, 0.0f, 0.0f, -1, "side-shoot"),
+    EnemySpec("drift-star05", AI_DRIFT, 44.8f, 1.3f, 22.0f, 370, 1.92f, 0.0f, 0.0f, -1, "point-spread"),
+    EnemySpec("drift-blob06", AI_DRIFT, 44.8f, 1.3f, 23.5f, 375, 1.92f, 0.0f, 0.0f, -1, "random-drift"),
+    EnemySpec("drift-ring07", AI_DRIFT, 64.0f, 1.45f, 16.0f, 580, 1.72f, 0.0f, 0.0f, -1, "ring-interlock"),
+    EnemySpec("drift-wave08", AI_DRIFT, 104.0f, 1.6f, 17.5f, 935, 1.56f, 0.0f, 0.0f, -1, "wave-drift"),
+    EnemySpec("drift-need09", AI_DRIFT, 16.0f, 1.0f, 19.0f, 140, 2.5f, 0.0f, 0.0f, -1, "needle-weave"),
+    EnemySpec("drift-cres10", AI_DRIFT, 28.8f, 1.15f, 20.5f, 245, 2.17f, 0.0f, 0.0f, -1, "crescent-sweep"),
+    EnemySpec("track-tri01", AI_TRACK, 28.8f, 1.15f, 22.0f, 250, 2.17f, 0.0f, 0.0f, -1, "track-lead"),
+    EnemySpec("track-dia02", AI_TRACK, 44.8f, 1.3f, 23.5f, 405, 1.92f, 0.0f, 0.0f, -1, "edge-shoot"),
+    EnemySpec("track-hex03", AI_TRACK, 44.8f, 1.3f, 16.0f, 410, 1.92f, 0.0f, 0.0f, -1, "hex-track"),
+    EnemySpec("track-star04", AI_TRACK, 64.0f, 1.45f, 17.5f, 615, 1.72f, 0.0f, 0.0f, -1, "star-track"),
+    EnemySpec("track-pred05", AI_TRACK, 104.0f, 1.6f, 19.0f, 970, 1.56f, 0.0f, 0.0f, -1, "predict-track"),
+    EnemySpec("track-cir06", AI_TRACK, 16.0f, 1.0f, 20.5f, 175, 2.5f, 0.0f, 0.0f, -1, "circle-lead"),
+    EnemySpec("track-pent07", AI_TRACK, 28.8f, 1.15f, 22.0f, 280, 2.17f, 0.0f, 0.0f, -1, "pent-lead"),
+    EnemySpec("dive-tri01", AI_DIVE, 16.0f, 1.0f, 23.5f, 185, 2.5f, 0.0f, 0.0f, -1, "drop-shot"),
+    EnemySpec("dive-dia02", AI_DIVE, 28.8f, 1.15f, 16.0f, 290, 2.17f, 0.0f, 0.0f, -1, "diamond-dive"),
+    EnemySpec("dive-spir03", AI_DIVE, 44.8f, 1.3f, 17.5f, 445, 1.92f, 0.0f, 0.0f, -1, "spiral-dive"),
+    EnemySpec("dive-zig04", AI_DIVE, 44.8f, 1.3f, 19.0f, 450, 1.92f, 0.0f, 0.0f, -1, "zigzag-dive"),
+    EnemySpec("dive-star05", AI_DIVE, 64.0f, 1.45f, 20.5f, 655, 1.72f, 0.0f, 0.0f, -1, "star-dive"),
+    EnemySpec("dive-cir06", AI_DIVE, 16.0f, 1.0f, 22.0f, 210, 2.5f, 0.0f, 0.0f, -1, "circle-dive"),
+    EnemySpec("dive-dia07", AI_DIVE, 28.8f, 1.15f, 23.5f, 315, 2.17f, 0.0f, 0.0f, -1, "diamond-gap"),
+    EnemySpec("weave-wave01", AI_WEAVE, 28.8f, 1.15f, 16.0f, 320, 2.17f, 0.0f, 0.0f, -1, "wave-weave"),
+    EnemySpec("weave-serp02", AI_WEAVE, 44.8f, 1.3f, 17.5f, 475, 1.92f, 0.0f, 0.0f, -1, "serpent-weave"),
+    EnemySpec("weave-spir03", AI_WEAVE, 64.0f, 1.45f, 19.0f, 680, 1.72f, 0.0f, 0.0f, -1, "spiral-weave"),
+    EnemySpec("weave-simple04", AI_WEAVE, 16.0f, 1.0f, 20.5f, 235, 2.5f, 0.0f, 0.0f, -1, "back-and-forth"),
+    EnemySpec("weave-805", AI_WEAVE, 28.8f, 1.15f, 22.0f, 340, 2.17f, 0.0f, 0.0f, -1, "figure-8"),
+    EnemySpec("weave-tang06", AI_WEAVE, 44.8f, 1.3f, 23.5f, 495, 1.92f, 0.0f, 0.0f, -1, "tangle-weave"),
+    EnemySpec("gun-rect01", AI_GUN, 28.8f, 1.15f, 16.0f, 350, 2.17f, 2.0f, 0.0f, -1, "forward-barrage"),
+    EnemySpec("gun-pent02", AI_GUN, 44.8f, 1.3f, 17.5f, 505, 1.92f, 3.0f, 0.0f, -1, "spread-pent"),
+    EnemySpec("gun-hex03", AI_GUN, 44.8f, 1.3f, 19.0f, 510, 1.92f, 3.0f, 0.0f, -1, "radial-hex"),
+    EnemySpec("gun-star04", AI_GUN, 64.0f, 1.45f, 20.5f, 715, 1.72f, 3.0f, 0.0f, -1, "star-all"),
+    EnemySpec("gun-cplx05", AI_GUN, 104.0f, 1.6f, 22.0f, 1070, 1.56f, 3.0f, 0.0f, -1, "complex-barrage"),
+    EnemySpec("gun-tri06", AI_GUN, 16.0f, 1.0f, 23.5f, 275, 2.5f, 2.0f, 0.0f, -1, "tri-forward"),
+    EnemySpec("gun-dia07", AI_GUN, 28.8f, 1.15f, 16.0f, 380, 2.17f, 2.0f, 0.0f, -1, "diamond-spread"),
+    EnemySpec("burst-cir01", AI_BURST, 16.0f, 1.0f, 17.5f, 285, 2.5f, 4.0f, 0.0f, -1, "burst-small"),
+    EnemySpec("burst-tri02", AI_BURST, 28.8f, 1.15f, 19.0f, 390, 2.17f, 4.0f, 0.0f, -1, "burst-tri"),
+    EnemySpec("burst-pent03", AI_BURST, 44.8f, 1.3f, 20.5f, 545, 1.92f, 4.0f, 0.0f, -1, "burst-pent"),
+    EnemySpec("burst-hex04", AI_BURST, 44.8f, 1.3f, 22.0f, 550, 1.92f, 4.0f, 0.0f, -1, "burst-hex"),
+    EnemySpec("burst-star05", AI_BURST, 64.0f, 1.45f, 23.5f, 755, 1.72f, 4.0f, 0.0f, -1, "burst-star"),
+    EnemySpec("burst-irr06", AI_BURST, 104.0f, 1.6f, 16.0f, 1110, 1.56f, 4.0f, 0.0f, -1, "burst-irr"),
+    EnemySpec("burst-dia07", AI_BURST, 16.0f, 1.0f, 17.5f, 315, 2.5f, 4.0f, 0.0f, -1, "burst-dia"),
+    EnemySpec("spiral-clock01", AI_SPIRAL, 28.8f, 1.15f, 19.0f, 420, 2.17f, 8.0f, 0.0f, -1, "spiral-out"),
+    EnemySpec("spiral-ccw02", AI_SPIRAL, 44.8f, 1.3f, 20.5f, 575, 1.92f, 8.0f, 0.0f, -1, "spiral-ccw"),
+    EnemySpec("spiral-dual03", AI_SPIRAL, 64.0f, 1.45f, 22.0f, 780, 1.72f, 8.0f, 0.0f, -1, "dual-spiral"),
+    EnemySpec("spiral-coil04", AI_SPIRAL, 16.0f, 1.0f, 23.5f, 335, 2.5f, 8.0f, 0.0f, -1, "coil-simple"),
+    EnemySpec("spiral-tight05", AI_SPIRAL, 28.8f, 1.15f, 16.0f, 440, 2.17f, 8.0f, 0.0f, -1, "tight-spiral"),
+    EnemySpec("spiral-loose06", AI_SPIRAL, 44.8f, 1.3f, 17.5f, 595, 1.92f, 8.0f, 0.0f, -1, "loose-spiral"),
+    EnemySpec("shield-circle01", AI_SHIELD, 28.8f, 1.15f, 19.0f, 450, 2.17f, 2.0f, 1.0f, -1, "shield-reg"),
+    EnemySpec("shield-hex02", AI_SHIELD, 44.8f, 1.3f, 20.5f, 605, 1.92f, 2.0f, 1.0f, -1, "shield-hex"),
+    EnemySpec("shield-multi03", AI_SHIELD, 64.0f, 1.45f, 22.0f, 810, 1.72f, 2.0f, 1.0f, -1, "multi-ring"),
+    EnemySpec("shield-irr05", AI_SHIELD, 104.0f, 1.6f, 23.5f, 1165, 1.56f, 2.0f, 1.0f, -1, "irreg-shield"),
+    EnemySpec("shield-small05", AI_SHIELD, 16.0f, 1.0f, 16.0f, 370, 2.5f, 2.0f, 1.0f, -1, "small-shield"),
+    EnemySpec("shield-pent06", AI_SHIELD, 28.8f, 1.15f, 17.5f, 475, 2.17f, 2.0f, 1.0f, -1, "shield-pent"),
+    EnemySpec("kami-tri01", AI_KAMI, 16.0f, 1.0f, 19.0f, 380, 2.5f, 0.0f, 0.0f, -1, "tri-crash"),
+    EnemySpec("kami-dia02", AI_KAMI, 28.8f, 1.15f, 20.5f, 485, 2.17f, 0.0f, 0.0f, -1, "dia-crash"),
+    EnemySpec("kami-pent03", AI_KAMI, 44.8f, 1.3f, 22.0f, 640, 1.92f, 0.0f, 0.0f, -1, "pent-crash"),
+    EnemySpec("kami-hex04", AI_KAMI, 44.8f, 1.3f, 23.5f, 645, 1.92f, 0.0f, 0.0f, -1, "hex-crash"),
+    EnemySpec("kami-star05", AI_KAMI, 64.0f, 1.45f, 16.0f, 850, 1.72f, 0.0f, 0.0f, -1, "star-crash"),
+    EnemySpec("kami-irr06", AI_KAMI, 104.0f, 1.6f, 17.5f, 1205, 1.56f, 0.0f, 0.0f, -1, "irr-crash"),
+    EnemySpec("kami-sml07", AI_KAMI, 16.0f, 1.0f, 19.0f, 410, 2.5f, 0.0f, 0.0f, -1, "small-kami"),
+    EnemySpec("sniper-long01", AI_SNIPER, 28.8f, 1.15f, 20.5f, 515, 2.17f, 0.0f, 0.0f, -1, "sniper-long"),
+    EnemySpec("sniper-pent02", AI_SNIPER, 44.8f, 1.3f, 22.0f, 670, 1.92f, 0.0f, 0.0f, -1, "sniper-pent"),
+    EnemySpec("sniper-hex03", AI_SNIPER, 44.8f, 1.3f, 23.5f, 675, 1.92f, 0.0f, 0.0f, -1, "sniper-hex"),
+    EnemySpec("sniper-star04", AI_SNIPER, 64.0f, 1.45f, 16.0f, 880, 1.72f, 0.0f, 0.0f, -1, "sniper-star"),
+    EnemySpec("sniper-irr05", AI_SNIPER, 104.0f, 1.6f, 17.5f, 1235, 1.56f, 0.0f, 0.0f, -1, "sniper-irr"),
+    EnemySpec("sniper-tri06", AI_SNIPER, 16.0f, 1.0f, 19.0f, 440, 2.5f, 0.0f, 0.0f, -1, "sniper-tri"),
+    EnemySpec("sniper-dia07", AI_SNIPER, 28.8f, 1.15f, 20.5f, 545, 2.17f, 0.0f, 0.0f, -1, "sniper-dia"),
+    EnemySpec("split-tri01", AI_SPLIT, 28.8f, 1.15f, 22.0f, 550, 2.17f, 2.0f, 0.0f, 71, "split-two"),
+    EnemySpec("split-dia02", AI_SPLIT, 44.8f, 1.3f, 23.5f, 705, 1.92f, 2.0f, 0.0f, 72, "split-dia"),
+    EnemySpec("split-star03", AI_SPLIT, 64.0f, 1.45f, 16.0f, 910, 1.72f, 2.0f, 0.0f, 73, "split-star"),
+    EnemySpec("split-irr04", AI_SPLIT, 104.0f, 1.6f, 17.5f, 1265, 1.56f, 2.0f, 0.0f, 74, "split-irr"),
+    EnemySpec("split-cir05", AI_SPLIT, 16.0f, 1.0f, 19.0f, 470, 2.5f, 2.0f, 0.0f, 75, "split-cir"),
+    EnemySpec("split-pent06", AI_SPLIT, 28.8f, 1.15f, 20.5f, 575, 2.17f, 2.0f, 0.0f, 76, "split-pent"),
+    EnemySpec("strafe-wide01", AI_STRAFE, 28.8f, 1.15f, 22.0f, 580, 2.17f, 0.0f, 0.0f, -1, "strafe-wide"),
+    EnemySpec("strafe-dia02", AI_STRAFE, 44.8f, 1.3f, 23.5f, 735, 1.92f, 0.0f, 0.0f, -1, "strafe-dia"),
+    EnemySpec("strafe-irr03", AI_STRAFE, 64.0f, 1.45f, 16.0f, 940, 1.72f, 0.0f, 0.0f, -1, "strafe-irr"),
+    EnemySpec("strafe-cir04", AI_STRAFE, 16.0f, 1.0f, 17.5f, 495, 2.5f, 0.0f, 0.0f, -1, "strafe-cir"),
+    EnemySpec("strafe-pent05", AI_STRAFE, 28.8f, 1.15f, 19.0f, 600, 2.17f, 0.0f, 0.0f, -1, "strafe-pent"),
+    EnemySpec("strafe-hex06", AI_STRAFE, 44.8f, 1.3f, 20.5f, 755, 1.92f, 0.0f, 0.0f, -1, "strafe-hex"),
+    EnemySpec("drift-rect11", AI_DRIFT, 28.8f, 1.15f, 22.0f, 610, 2.17f, 0.0f, 0.0f, -1, "rect-drift"),
+    EnemySpec("drift-para12", AI_DRIFT, 44.8f, 1.3f, 23.5f, 765, 1.92f, 0.0f, 0.0f, -1, "para-drift"),
+    EnemySpec("track-oct08", AI_TRACK, 28.8f, 1.15f, 16.0f, 620, 2.17f, 0.0f, 0.0f, -1, "oct-track"),
+    EnemySpec("dive-oct08", AI_DIVE, 28.8f, 1.15f, 17.5f, 625, 2.17f, 0.0f, 0.0f, -1, "dive-oct"),
+    EnemySpec("weave-8h08", AI_WEAVE, 28.8f, 1.15f, 19.0f, 630, 2.17f, 0.0f, 0.0f, -1, "weave-8h"),
+    EnemySpec("gun-oct08", AI_GUN, 44.8f, 1.3f, 20.5f, 785, 1.92f, 3.0f, 0.0f, -1, "gun-oct"),
+    EnemySpec("burst-oct08", AI_BURST, 28.8f, 1.15f, 22.0f, 640, 2.17f, 4.0f, 0.0f, -1, "burst-oct"),
+    EnemySpec("spiral-tri07", AI_SPIRAL, 64.0f, 1.45f, 23.5f, 995, 1.72f, 8.0f, 0.0f, -1, "tri-spiral"),
+    EnemySpec("shield-oct07", AI_SHIELD, 104.0f, 1.6f, 16.0f, 1350, 1.56f, 2.0f, 1.0f, -1, "oct-shield"),
+    EnemySpec("kami-oct08", AI_KAMI, 64.0f, 1.45f, 17.5f, 1005, 1.72f, 0.0f, 0.0f, -1, "oct-kami"),
+    EnemySpec("sniper-oct08", AI_SNIPER, 64.0f, 1.45f, 19.0f, 1010, 1.72f, 0.0f, 0.0f, -1, "sniper-oct"),
+    EnemySpec("split-oct07", AI_SPLIT, 104.0f, 1.6f, 20.5f, 1365, 1.56f, 2.0f, 0.0f, 94, "split-oct"),
+    EnemySpec("strafe-oct07", AI_STRAFE, 64.0f, 1.45f, 22.0f, 1020, 1.72f, 0.0f, 0.0f, -1, "strafe-oct"),
+    EnemySpec("drift-arrow96", AI_DRIFT, 16.0f, 1.0f, 23.5f, 575, 2.5f, 0.0f, 0.0f, -1, "arrow-drift"),
+    EnemySpec("track-star97", AI_TRACK, 28.8f, 1.15f, 16.0f, 680, 2.17f, 0.0f, 0.0f, -1, "star-track"),
+    EnemySpec("dive-star98", AI_DIVE, 28.8f, 1.15f, 17.5f, 685, 2.17f, 0.0f, 0.0f, -1, "dive-star"),
+    EnemySpec("weave-cx99", AI_WEAVE, 44.8f, 1.3f, 19.0f, 840, 1.92f, 0.0f, 0.0f, -1, "weave-complex"),
+    EnemySpec("gun-irr100", AI_GUN, 104.0f, 1.6f, 20.5f, 1395, 1.56f, 3.0f, 0.0f, -1, "gun-irr"),
 )
 
 // Box obstacle kinds (portrait)
-const val BOX_BLOCK_S = 0
+val BOX_BLOCK_S = 0
 const val BOX_BLOCK_L = 1
 const val BOX_DRIFT = 2
 const val BOX_WALL_V = 3 // horizontal wall, left-right gap
@@ -452,7 +452,8 @@ class World(val save: Save, val sound: Sound) {
         val p = player
         val ship = ALL_100_PLAYER_SHIPS[save.shipIndex()]
         p.x = w / 2f; p.y = h * 0.78f
-        p.hits = (ship.health / 5).coerceIn(6, 40)
+        val effectiveHp = ship.health + save.upHp() + save.upElite() * 20
+        p.hits = (effectiveHp / 5).coerceIn(6, 40)
         p.invuln = 1f; p.fireCd = 0f
         p.rapidT = 0f; p.doubleT = 0f; p.spreadT = 0f; p.pierceT = 0f
         p.dead = false; p.deathT = 0f
@@ -529,6 +530,9 @@ class World(val save: Save, val sound: Sound) {
         streak++
         streakT = 3f
         addText(x, y, "+$pts")
+        // shop-combo-system: combo streak multiplier increases coin drops
+        val earnedCoins = (mult * (base / 10).coerceAtLeast(1))
+        save.addCoins(earnedCoins)
     }
 
     // ---------------- firing ----------------
@@ -549,7 +553,8 @@ class World(val save: Save, val sound: Sound) {
             b.dmg = dmg; b.big = big; b.pierce = p.pierceT > 0 || ship.skill.contains("pierce")
             shots.add(b)
         }
-        val dmg = 24f + ship.power * 6f
+        val effectivePwr = ship.power + save.upPwr() + save.upElite()
+        val dmg = 24f + effectivePwr * 6f
         if (p.spreadT > 0) {
             shot(sx, sy, 0f, -950f, dmg, p.pierceT > 0)
             shot(sx, sy, -220f, -880f, dmg * 0.8f, false)
@@ -592,6 +597,24 @@ class World(val save: Save, val sound: Sound) {
         }
         if (rnd.nextFloat() < 0.15f) dropItem(e.x, e.y)
         if (rnd.nextFloat() < 0.06f) dropHeart(e.x + 30f, e.y)
+        // Coin collection system: basic coins + rare golden coins from special enemies + collectible parts
+        if (rnd.nextFloat() < 0.28f) dropCoin(e.x - 20f, e.y, false)
+        if (e.r > 20f && rnd.nextFloat() < 0.12f) dropCoin(e.x + 20f, e.y, true)
+        if (e.r > 30f && rnd.nextFloat() < 0.08f) dropPart(e.x, e.y - 20f)
+    }
+
+    fun dropCoin(x: Float, y: Float, rare: Boolean) {
+        val it = Item()
+        it.kind = if (rare) P_COIN_RARE else P_COIN
+        it.x = x.coerceIn(40f, w - 40f); it.y = y.coerceIn(80f, h - 80f)
+        items.add(it)
+    }
+
+    fun dropPart(x: Float, y: Float) {
+        val it = Item()
+        it.kind = P_PART
+        it.x = x.coerceIn(40f, w - 40f); it.y = y.coerceIn(80f, h - 80f)
+        items.add(it)
     }
 
     fun dropHeart(x: Float, y: Float) {
@@ -1361,12 +1384,25 @@ class World(val save: Save, val sound: Sound) {
                 addText(p.x + 70f, p.y - 50f, "PIERCE")
             }
             4 -> {
-                if (p.hits < 15) {
+                val maxHits = (6 + save.upDur() + save.upElite()).coerceAtMost(30)
+                if (p.hits < maxHits) {
                     p.hits++
                     addText(p.x + 70f, p.y - 50f, "+HULL")
                 } else {
                     addScore(500, p.x + 70f, p.y - 50f)
                 }
+            }
+            P_COIN -> {
+                save.addCoins(100)
+                addText(p.x + 70f, p.y - 50f, "+100 C")
+            }
+            P_COIN_RARE -> {
+                save.addCoins(500)
+                addText(p.x + 70f, p.y - 50f, "+500 C GOLD")
+            }
+            P_PART -> {
+                save.addShipPart(1)
+                addText(p.x + 70f, p.y - 50f, "+1 SHIP PART")
             }
         }
     }

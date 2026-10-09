@@ -21,6 +21,9 @@ const val P_DOUBLE = 1
 const val P_SPREAD = 2
 const val P_PIERCE = 3
 const val P_HEART = 4
+const val P_COIN = 5
+const val P_COIN_RARE = 6
+const val P_PART = 7
 
 /** Strict black/white pixel sprites, portrait orientation. No color, no gradients. */
 object Art {
@@ -86,6 +89,10 @@ object Art {
 
     // ---------------- enemies (face down), one silhouette per AI family ----------------
             fun drawEnemy(c: Canvas, ai: Int, spec: Int, x: Float, y: Float, r: Float, t: Long, shieldUp: Boolean, flash: Boolean) {
+        AlienShipRenderer.drawAlien(c, spec, x, y, r, t, shieldUp, flash)
+        return
+    }
+    fun drawEnemyOld(c: Canvas, ai: Int, spec: Int, x: Float, y: Float, r: Float, t: Long, shieldUp: Boolean, flash: Boolean) {
         val col = if (flash) BLACK else WHITE
         val inv = if (flash) WHITE else BLACK
         val bg = if (flash) WHITE else DARK
@@ -270,6 +277,38 @@ object Art {
             path.lineTo(x + 1.5f * u, y + 0.2f * u)
             path.close()
             c.drawPath(path, fill)
+            return
+        }
+        if (kind == P_COIN || kind == P_COIN_RARE) {
+            // coin pickup: retro circular coin with inner ring and "C" symbol
+            val isRare = kind == P_COIN_RARE
+            stroke.color = WHITE
+            stroke.strokeWidth = if (isRare) 5f else 3f
+            c.drawCircle(x, y, r, stroke)
+            if (isRare && (t / 120) % 2L == 0L) {
+                fill.color = WHITE
+                c.drawCircle(x, y, r * 0.7f, fill)
+                txt.color = BLACK
+            } else {
+                txt.color = WHITE
+            }
+            txt.textSize = r * 1.3f
+            c.drawText(if (isRare) "G" else "C", x, y + r * 0.42f, txt)
+            return
+        }
+        if (kind == P_PART) {
+            // ship part collectible: diamond crate
+            stroke.color = WHITE
+            stroke.strokeWidth = 4f
+            path.reset()
+            path.moveTo(x, y - r * 1.2f)
+            path.lineTo(x + r * 1.2f, y)
+            path.lineTo(x, y + r * 1.2f)
+            path.lineTo(x - r * 1.2f, y)
+            path.close()
+            c.drawPath(path, stroke)
+            fill.color = WHITE
+            c.drawRect(x - r * 0.4f, y - r * 0.4f, x + r * 0.4f, y + r * 0.4f, fill)
             return
         }
         if ((t / 150) % 2L == 0L) {
