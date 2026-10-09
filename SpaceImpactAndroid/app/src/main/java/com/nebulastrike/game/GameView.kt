@@ -18,7 +18,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     View(context), WorldListener {
 
     companion object {
-        const val BUILD_TAG = "v1.1.2"
+        const val BUILD_TAG = "v1.1.3"
     }
 
     enum class State { TITLE, PLAY, PAUSE, OVER, END, SHOP, SETTINGS, HIGHSCORE, CREDITS }
@@ -210,31 +210,31 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                                 }
                                 return true
                             }
-                            if (y > height * 0.52f && y < height * 0.57f) { // 1. buy pwr upgrade
-                                if (save.coins() >= 1000) { save.addCoins(-1000); save.addUpPwr(1) }
+                            if (y > height * 0.45f && y < height * 0.51f) { // 1. buy pwr upgrade
+                                if (save.coins() >= 1000 && save.upPwr() < 10) { save.addCoins(-1000); save.addUpPwr(1) }
                                 return true
                             }
-                            if (y > height * 0.57f && y < height * 0.62f) { // 2. buy spd upgrade
-                                if (save.coins() >= 1200) { save.addCoins(-1200); save.addUpSpd(1) }
+                            if (y > height * 0.51f && y < height * 0.57f) { // 2. buy spd upgrade
+                                if (save.coins() >= 1200 && save.upSpd() < 10) { save.addCoins(-1200); save.addUpSpd(1) }
                                 return true
                             }
-                            if (y > height * 0.62f && y < height * 0.67f) { // 3. buy dur upgrade
-                                if (save.coins() >= 1300) { save.addCoins(-1300); save.addUpDur(1) }
+                            if (y > height * 0.57f && y < height * 0.63f) { // 3. buy dur upgrade
+                                if (save.coins() >= 1300 && save.upDur() < 10) { save.addCoins(-1300); save.addUpDur(1) }
                                 return true
                             }
-                            if (y > height * 0.67f && y < height * 0.72f) { // 4. buy hp upgrade
-                                if (save.coins() >= 1500) { save.addCoins(-1500); save.addUpHp(20) }
+                            if (y > height * 0.63f && y < height * 0.69f) { // 4. buy hp upgrade
+                                if (save.coins() >= 1500 && save.upHp() < 200) { save.addCoins(-1500); save.addUpHp(20) }
                                 return true
                             }
-                            if (y > height * 0.72f && y < height * 0.77f) { // 5. buy skill slot
-                                if (save.coins() >= 2000) { save.addCoins(-2000); save.unlockSkillSlot() }
+                            if (y > height * 0.69f && y < height * 0.75f) { // 5. buy skill slot
+                                if (save.coins() >= 2000 && save.upSkillSlots() < 4) { save.addCoins(-2000); save.unlockSkillSlot() }
                                 return true
                             }
-                            if (y > height * 0.77f && y < height * 0.82f) { // 6. elite all-stats
-                                if (save.coins() >= 3000) { save.addCoins(-3000); save.addUpElite(1) }
+                            if (y > height * 0.75f && y < height * 0.81f) { // 6. elite all-stats
+                                if (save.coins() >= 3000 && save.upElite() < 10) { save.addCoins(-3000); save.addUpElite(1) }
                                 return true
                             }
-                            if (y > height * 0.82f && y < height * 0.88f) { // 7. craft parts
+                            if (y > height * 0.81f && y < height * 0.88f) { // 7. craft parts
                                 if (save.shipParts() >= 5) { save.addShipPart(-5); save.addCoins(2500) }
                                 return true
                             }
@@ -448,40 +448,65 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
 
 
     private fun drawShop(c: Canvas, w: Float, h: Float, t: Long) {
-        centerText(c, "SHIP HANGAR & UPGRADE SHOP", w / 2f, h * 0.08f, 26f)
+        centerText(c, "SHIP HANGAR & UPGRADE SHOP", w / 2f, h * 0.07f, 26f)
         val curShip = ALL_100_PLAYER_SHIPS[save.shipIndex()]
         val coins = save.coins()
         txt.color = WHITE
-        centerText(c, "BANK: $coins COINS  |  PARTS: ${save.shipParts()}", w / 2f, h * 0.12f, 18f)
+        centerText(c, "BANK: $coins COINS  |  PARTS: ${save.shipParts()}", w / 2f, h * 0.11f, 18f)
 
         // Category filter bar
         txt.color = GRAY
-        centerText(c, "< CATEGORY: $shopFilter >", w / 2f, h * 0.16f, 17f)
+        centerText(c, "< CATEGORY: $shopFilter >", w / 2f, h * 0.15f, 17f)
 
         // Display current ship
-        Art.drawPlayer(c, w / 2f, h * 0.25f, 42f, t, false, save.shipIndex())
+        Art.drawPlayer(c, w / 2f, h * 0.23f, 38f, t, false, save.shipIndex())
         txt.color = WHITE
-        centerText(c, "<  #${curShip.num}: ${curShip.name.uppercase()}  >", w / 2f, h * 0.32f, 20f)
+        centerText(c, "<  #${curShip.num}: ${curShip.name.uppercase()}  >", w / 2f, h * 0.30f, 20f)
         txt.color = GRAY
-        centerText(c, "TIER: ${curShip.diff}  COST: ${curShip.cost} C", w / 2f, h * 0.36f, 16f)
+        centerText(c, "TIER: ${curShip.diff}  COST: ${curShip.cost} C", w / 2f, h * 0.34f, 15f)
         val pwrTotal = curShip.power + save.upPwr() + save.upElite()
         val spdTotal = curShip.speed + save.upSpd() + save.upElite()
         val durTotal = curShip.durability + save.upDur() + save.upElite()
         val hpTotal = curShip.health + save.upHp() + save.upElite() * 20
-        centerText(c, "PWR: $pwrTotal (+${save.upPwr()})  SPD: $spdTotal (+${save.upSpd()})  DUR: $durTotal", w / 2f, h * 0.40f, 15f)
-        centerText(c, "HULL HP: $hpTotal  SLOTS: ${save.upSkillSlots()}/4", w / 2f, h * 0.44f, 15f)
+        centerText(c, "PWR: $pwrTotal  SPD: $spdTotal  DUR: $durTotal  HP: $hpTotal", w / 2f, h * 0.38f, 15f)
         txt.color = WHITE
-        centerText(c, "SKILL: [${curShip.skill.uppercase()}]", w / 2f, h * 0.48f, 16f)
+        centerText(c, "SKILL: [${curShip.skill.uppercase()}]", w / 2f, h * 0.42f, 16f)
 
-        // Upgrade Buttons
+        // Upgrade Buttons with Visual Progress Bars
+        fun drawUpgradeRow(title: String, cost: String, lvl: Int, maxLvl: Int, yPos: Float) {
+            val barW = w * 0.36f
+            val bx = w * 0.58f
+            txt.textAlign = Paint.Align.LEFT
+            txt.textSize = 15f * resources.displayMetrics.scaledDensity / 2.2f
+            txt.color = WHITE
+            c.drawText(title, w * 0.08f, yPos + 6f, txt)
+
+            // Draw progress bar background & fill
+            fill.color = DARK
+            c.drawRect(bx, yPos - 10f, bx + barW, yPos + 8f, fill)
+            Art.stroke.color = WHITE; Art.stroke.strokeWidth = 2f
+            c.drawRect(bx, yPos - 10f, bx + barW, yPos + 8f, Art.stroke)
+            val fillW = barW * (lvl.toFloat() / maxLvl.coerceAtLeast(1)).coerceIn(0f, 1f)
+            fill.color = WHITE
+            c.drawRect(bx, yPos - 10f, bx + fillW, yPos + 8f, fill)
+
+            txt.textAlign = Paint.Align.LEFT
+            txt.textSize = 12f * resources.displayMetrics.scaledDensity / 2.2f
+            txt.color = if (lvl >= maxLvl) GRAY else WHITE
+            c.drawText(if (lvl >= maxLvl) "MAX" else cost, bx + barW + 12f, yPos + 5f, txt)
+            txt.textAlign = Paint.Align.CENTER
+        }
+
+        drawUpgradeRow("1. POWER", "1000 C", save.upPwr(), 10, h * 0.48f)
+        drawUpgradeRow("2. SPEED", "1200 C", save.upSpd(), 10, h * 0.54f)
+        drawUpgradeRow("3. DURABILITY", "1300 C", save.upDur(), 10, h * 0.60f)
+        drawUpgradeRow("4. HEALTH +20", "1500 C", save.upHp() / 20, 10, h * 0.66f)
+        drawUpgradeRow("5. SKILL SLOTS", "2000 C", save.upSkillSlots() - 1, 3, h * 0.72f)
+        drawUpgradeRow("6. ELITE ALL+1", "3000 C", save.upElite(), 10, h * 0.78f)
+
+        // Craft part row
         txt.color = WHITE
-        centerText(c, "[ 1. UPGRADE POWER +1 (1000 C) ]", w / 2f, h * 0.54f, 16f)
-        centerText(c, "[ 2. UPGRADE SPEED +1 (1200 C) ]", w / 2f, h * 0.59f, 16f)
-        centerText(c, "[ 3. UPGRADE DURABILITY +1 (1300 C) ]", w / 2f, h * 0.64f, 16f)
-        centerText(c, "[ 4. UPGRADE HEALTH +20 (1500 C) ]", w / 2f, h * 0.69f, 16f)
-        centerText(c, "[ 5. UNLOCK SKILL SLOT (2000 C) ]", w / 2f, h * 0.74f, 16f)
-        centerText(c, "[ 6. ELITE ALL-STATS +1 (3000 C) ]", w / 2f, h * 0.79f, 16f)
-        centerText(c, "[ 7. CRAFT PART REWARD (5 PARTS) ]", w / 2f, h * 0.84f, 16f)
+        centerText(c, "[ 7. CRAFT PART REWARD (5 PARTS -> 2500 C) ]", w / 2f, h * 0.84f, 16f)
 
         txt.color = GRAY
         centerText(c, "< TAP BOTTOM TO RETURN TO MENU >", w / 2f, h * 0.93f, 16f)
