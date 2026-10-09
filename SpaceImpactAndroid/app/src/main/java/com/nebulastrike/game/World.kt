@@ -143,7 +143,7 @@ val ENEMY_ROSTER = listOf(
 )
 
 // Box obstacle kinds (portrait)
-val BOX_BLOCK_S = 0
+const val BOX_BLOCK_S = 0
 const val BOX_BLOCK_L = 1
 const val BOX_DRIFT = 2
 const val BOX_WALL_V = 3 // horizontal wall, left-right gap
@@ -1418,8 +1418,8 @@ class World(val save: Save, val sound: Sound) {
                 addText(p.x + 70f, p.y - 50f, "PIERCE")
             }
             4 -> {
-                val maxHits = (6 + save.upDur() + save.upElite()).coerceAtMost(30)
-                if (p.hits < maxHits) {
+                // Use p.maxHits which is already calculated in reset() from ship.health + upgrades
+                if (p.hits < p.maxHits) {
                     p.hits++
                     addText(p.x + 70f, p.y - 50f, "+HULL")
                 } else {

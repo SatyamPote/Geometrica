@@ -18,7 +18,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     View(context), WorldListener {
 
     companion object {
-        const val BUILD_TAG = "v1.1.5"
+        const val BUILD_TAG = "v1.1.6"
     }
 
     enum class State { TITLE, PLAY, PAUSE, OVER, END, SHOP, SETTINGS, HIGHSCORE, CREDITS }
@@ -773,20 +773,20 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
             }
         }
 
-        // ENERGY BAR (Gauge underneath Hull)
+        // ENERGY BAR (Gauge underneath Hull, moved down to avoid boss HP bar overlap)
         txt.color = GRAY
         txt.textSize = 13f * resources.displayMetrics.scaledDensity / 2.6f
-        c.drawText("NRG", w - 180f, 48f, txt)
+        c.drawText("NRG", w - 180f, 64f, txt)
         val nrgBarW = 142f
         val nrgBarX = w - 170f
         fill.color = DARK
-        c.drawRect(nrgBarX, 36f, nrgBarX + nrgBarW, 50f, fill)
+        c.drawRect(nrgBarX, 54f, nrgBarX + nrgBarW, 68f, fill)
         Art.stroke.color = WHITE
         Art.stroke.strokeWidth = 2f
-        c.drawRect(nrgBarX, 36f, nrgBarX + nrgBarW, 50f, Art.stroke)
+        c.drawRect(nrgBarX, 54f, nrgBarX + nrgBarW, 68f, Art.stroke)
         val nrgFrac = (p.energy / p.maxEnergy.coerceAtLeast(1f)).coerceIn(0f, 1f)
         fill.color = WHITE
-        c.drawRect(nrgBarX, 36f, nrgBarX + nrgBarW * nrgFrac, 50f, fill)
+        c.drawRect(nrgBarX, 54f, nrgBarX + nrgBarW * nrgFrac, 68f, fill)
 
         txt.textAlign = Paint.Align.CENTER
         txt.textSize = 18f * resources.displayMetrics.scaledDensity / 2.6f

@@ -401,8 +401,8 @@ object Art {
                 stroke.color = col; stroke.strokeWidth = 3f
                 c.drawRect((x-bw*0.25).toFloat(), (y-bw*0.45).toFloat(), (x+bw*0.25).toFloat(), (y+bw*0.45).toFloat(), stroke)
                 for (row in 0 until 4) {
-                for (col in 0 until 2) {
-                val wx = (x - bw*0.15 + col * bw*0.2).toFloat()
+                for (ci in 0 until 2) {
+                val wx = (x - bw*0.15 + ci * bw*0.2).toFloat()
                 val wy = (y - bw*0.35 + row * bw*0.2).toFloat()
                 c.drawRect((wx-8).toFloat(), (wy-8).toFloat(), (wx+8).toFloat(), (wy+8).toFloat(), fill.apply { color = col })
             }
