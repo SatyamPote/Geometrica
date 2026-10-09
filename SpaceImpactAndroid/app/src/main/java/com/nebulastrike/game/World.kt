@@ -301,6 +301,15 @@ class Player {
     var skillActive = false
     var dead = false
     var deathT = 0f
+    var missileTimer = 10f
+    var laserFiring = false
+}
+
+class Missile {
+    var x = 0f; var y = 0f; var vx = 0f; var vy = -400f
+    var r = 9f; var dmg = 180f; var life = 5.0f
+    var speed = 620f
+    var trailT = 0f
 }
 
 class Bullet {
@@ -385,6 +394,7 @@ class World(val save: Save, val sound: Sound) {
 
     val player = Player()
     val shots = mutableListOf<Bullet>()
+    val missiles = mutableListOf<Missile>()
     val foeShots = mutableListOf<Bullet>()
     val enemies = mutableListOf<Enemy>()
     val items = mutableListOf<Item>()
@@ -444,7 +454,7 @@ class World(val save: Save, val sound: Sound) {
     }
 
     fun reset() {
-        shots.clear(); foeShots.clear(); enemies.clear(); items.clear()
+        shots.clear(); missiles.clear(); foeShots.clear(); enemies.clear(); items.clear()
         parts.clear(); texts.clear(); rocks.clear(); boxes.clear(); beams.clear()
         boss = null
         score = 0; streak = 0; streakT = 0f; maxStreak = 0
@@ -596,6 +606,28 @@ class World(val save: Save, val sound: Sound) {
             shot(sx + 14f, sy, 0f, -980f, dmg, p.pierceT > 0)
         } else {
             shot(sx, sy, 0f, -980f, dmg, p.pierceT > 0)
+        }
+
+        // Dual Companion Drones ("Two bought Spaceship side by side Attachments")
+        if (ship.hasDrones) {
+            shot(sx - 48f, sy + 10f, -30f, -960f, dmg * 0.75f, false)
+            shot(sx + 48f, sy + 10f, 30f, -960f, dmg * 0.75f, false)
+        }
+    }
+
+    /** Launch guided auto-homing missiles towards nearest enemy or boss */
+    fun launchMissiles(n: Int = 2, dmg: Float = 250f) {
+        val p = player
+        sound.pickup()
+        for (i in 0 until n) {
+            val m = Missile()
+            val off = if (n == 1) 0f else ((i.toFloat() / (n - 1).coerceAtLeast(1) - 0.5f) * 64f)
+            m.x = p.x + off
+            m.y = p.y - 28f
+            m.vx = (if (i % 2 == 0) -180f else 180f) * (0.85f + rnd.nextFloat() * 0.3f)
+            m.vy = -380f
+            m.dmg = dmg
+            missiles.add(m)
         }
     }
 
@@ -973,6 +1005,8 @@ class World(val save: Save, val sound: Sound) {
         updateBoxes(dt)
         boss?.update(dt, this, elapsed)
         updateShots(dt)
+        updateMissiles(dt)
+        updateContinuousLaser(dt)
         updateBeams(dt)
         updateItems(dt)
         updateFx(dt)
@@ -1028,6 +1062,19 @@ class World(val save: Save, val sound: Sound) {
         p.energy = min(p.maxEnergy, p.energy + rechargeRate * dt)
 
         if (input.firing) firePlayer()
+
+        // Automatic Guided Missile Salvo every 8-10 seconds
+        if (ship.hasMissiles && !p.dead) {
+            p.missileTimer -= dt
+            if (p.missileTimer <= 0f) {
+                val cooldown = if (ship.num == 4 || ship.num == 7) 8f else 10f
+                p.missileTimer = cooldown
+                val missileCount = if (ship.num == 4 || ship.num == 7) 4 else 2
+                val missileDmg = 180f + (ship.power + save.upPwr(sIdx) + save.upElite(sIdx)) * 35f
+                launchMissiles(missileCount, missileDmg)
+                addText(p.x, p.y - 50f, "MISSILES LAUNCHED")
+            }
+        }
     }
 
     private fun updateDirector(dt: Float) {
@@ -1421,6 +1468,133 @@ class World(val save: Save, val sound: Sound) {
                 }
             }
             if (dead) foeShots.remove(b)
+        }
+    }
+
+    private fun updateMissiles(dt: Float) {
+        for (m in missiles.toList()) {
+            m.life -= dt
+            if (m.life <= 0) {
+                missiles.remove(m)
+                continue
+            }
+            // Spawn spark / smoke particle trail
+            m.trailT -= dt
+            if (m.trailT <= 0f) {
+                m.trailT = 0.035f
+                if (parts.size < 380) {
+                    val p = Particle()
+                    p.x = m.x + (rnd.nextFloat() - 0.5f) * 6f
+                    p.y = m.y + 12f
+                    p.vx = (rnd.nextFloat() - 0.5f) * 50f
+                    p.vy = 90f + rnd.nextFloat() * 60f
+                    p.maxLife = 0.28f; p.life = p.maxLife
+                    p.size = 4.5f
+                    parts.add(p)
+                }
+            }
+
+            // Find target (closest active boss or enemy)
+            val b = boss
+            var tx = m.x
+            var ty = -200f
+            if (b != null && b.entered && !b.gone && b.vulnerable()) {
+                tx = b.x
+                ty = b.y
+            } else {
+                val target = enemies.filter { !it.gone && it.y > 0 }.minByOrNull { hypot(it.x - m.x, it.y - m.y) }
+                if (target != null) {
+                    tx = target.x
+                    ty = target.y
+                }
+            }
+
+            // Steer towards target
+            val targetAngle = atan2(ty - m.y, tx - m.x)
+            val curAngle = atan2(m.vy, m.vx)
+            var diff = targetAngle - curAngle
+            while (diff < -PI) diff += (2 * PI).toFloat()
+            while (diff > PI) diff -= (2 * PI).toFloat()
+            val newAngle = curAngle + diff.coerceIn(-5.5f * dt, 5.5f * dt)
+            m.speed = min(860f, m.speed + 360f * dt)
+            m.vx = (cos(newAngle) * m.speed).toFloat()
+            m.vy = (sin(newAngle) * m.speed).toFloat()
+            m.x += m.vx * dt
+            m.y += m.vy * dt
+
+            // Collision test with rocks and boxes
+            var hit = false
+            for (r in rocks) {
+                if (hypot(m.x - r.x, m.y - r.y) < r.r + m.r) {
+                    r.hp -= m.dmg
+                    hit = true
+                    break
+                }
+            }
+            if (!hit) {
+                for (bx in boxes.toList()) {
+                    if (bx.gone || bx.hp <= 0) continue
+                    val cx = m.x.coerceIn(bx.x - bx.w / 2, bx.x + bx.w / 2)
+                    val cy = m.y.coerceIn(bx.y - bx.h / 2, bx.y + bx.h / 2)
+                    if (hypot(m.x - cx, m.y - cy) < m.r + 10f) {
+                        damageBox(bx, m.dmg)
+                        hit = true
+                        break
+                    }
+                }
+            }
+            if (!hit) {
+                for (e in enemies.toList()) {
+                    if (!e.gone && hypot(e.x - m.x, e.y - m.y) < e.r + m.r + 6f) {
+                        damageEnemy(e, m.dmg)
+                        hit = true
+                        break
+                    }
+                }
+            }
+            if (!hit && b != null && !b.dying && b.tryHit(m.x, m.y, m.dmg, this, elapsed)) {
+                hit = true
+            }
+            if (hit) {
+                explode(m.x, m.y, 22, true)
+                sound.boom(false)
+                shake = max(shake, 6f)
+                missiles.remove(m)
+            } else if (m.y < -120f || m.y > h + 120f || m.x < -120f || m.x > w + 120f) {
+                missiles.remove(m)
+            }
+        }
+    }
+
+    private fun updateContinuousLaser(dt: Float) {
+        val p = player
+        if (p.dead || !input.firing) return
+        val sIdx = save.shipIndex()
+        val ship = ALL_100_PLAYER_SHIPS[sIdx]
+        if (!ship.hasLaser) return
+
+        val effectivePwr = ship.power + save.upPwr(sIdx) + save.upElite(sIdx)
+        val beamWidth = 24f + effectivePwr * 2f
+        val beamDmg = (16f + effectivePwr * 6f) * (dt / 0.08f)
+
+        // Damage enemies in vertical laser column
+        for (e in enemies.toList()) {
+            if (!e.gone && e.y < p.y && kotlin.math.abs(e.x - p.x) < beamWidth / 2f + e.r) {
+                damageEnemy(e, beamDmg)
+                if (rnd.nextFloat() < 0.25f) explode(e.x, e.y, 2, false)
+            }
+        }
+        // Damage rocks & boxes in beam
+        for (r in rocks) {
+            if (r.y < p.y && kotlin.math.abs(r.x - p.x) < beamWidth / 2f + r.r) {
+                r.hp -= beamDmg
+            }
+        }
+        // Damage boss in laser column
+        val b = boss
+        if (b != null && !b.dying && b.y < p.y && kotlin.math.abs(b.x - p.x) < beamWidth / 2f + b.wPx * 0.55f) {
+            b.tryHit(b.x, b.y, beamDmg, this, elapsed)
+            if (rnd.nextFloat() < 0.35f) explode(b.x, b.y + 40f, 3, false)
         }
     }
 

@@ -7,7 +7,10 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** Procedural renderer for all 100 distinct player spaceships. */
+/**
+ * High-definition procedural renderer for the 7 specialized player starships,
+ * including their dual side-by-side companion drone attachments, continuous lasers, and missile pods.
+ */
 object PlayerShipRenderer {
     private val path = Path()
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
@@ -19,175 +22,165 @@ object PlayerShipRenderer {
         val bg = BLACK
         val inv = GRAY
         val f = if ((t / 90) % 2L == 0L) 1f else 0.6f
-        // Engine plume
+
+        // Engine exhaust plumes
         fill.color = col
-        c.drawRect(x - s * 0.14f, y + s * 0.75f, x + s * 0.14f, y + s * 0.75f + s * 0.5f * f, fill)
+        c.drawRect(x - s * 0.14f, y + s * 0.75f, x + s * 0.14f, y + s * 0.75f + s * 0.55f * f, fill)
         fill.color = inv
         c.drawRect(x - s * 0.07f, y + s * 1.05f, x + s * 0.07f, y + s * 1.05f + s * 0.35f * f, fill)
 
-        val idx = shipIdx.coerceIn(0, 99)
-        val archetype = idx % 20
-        val tier = idx / 20
-
+        val idx = shipIdx.coerceIn(0, 6)
         fill.color = col; stroke.color = col; stroke.strokeWidth = 2.5f
 
-        when (archetype) {
-            0 -> { // Interceptor (needle dart with swept strakes)
-                path.reset(); path.moveTo(x, y - s * 1.3f)
-                path.lineTo(x + s * (0.35f + tier * 0.06f), y + s * 0.6f)
+        when (idx) {
+            0 -> {
+                // #1: STAR-BLASTER (Vanguard Needle-Dart with Wingtip Micro-Missile Pods)
+                path.reset(); path.moveTo(x, y - s * 1.35f)
+                path.lineTo(x + s * 0.45f, y + s * 0.65f)
                 path.lineTo(x, y + s * 0.4f)
-                path.lineTo(x - s * (0.35f + tier * 0.06f), y + s * 0.6f); path.close()
+                path.lineTo(x - s * 0.45f, y + s * 0.65f); path.close()
                 c.drawPath(path, fill)
-                c.drawCircle(x, y - s * 0.15f, s * 0.15f, fill.apply { color = bg })
+                // Missile pods on wings
+                c.drawRect(x - s * 0.55f, y + s * 0.2f, x - s * 0.4f, y + s * 0.6f, fill)
+                c.drawRect(x + s * 0.4f, y + s * 0.2f, x + s * 0.55f, y + s * 0.6f, fill)
+                // Cockpit slit
+                c.drawRect(x - s * 0.08f, y - s * 0.35f, x + s * 0.08f, y + s * 0.1f, fill.apply { color = bg })
             }
-            1 -> { // Striker (delta wing with forward canards)
-                path.reset(); path.moveTo(x, y - s * 1.1f)
-                path.lineTo(x + s * 0.75f, y + s * 0.7f); path.lineTo(x + s * 0.25f, y + s * 0.5f)
-                path.lineTo(x, y + s * 0.7f); path.lineTo(x - s * 0.25f, y + s * 0.5f)
-                path.lineTo(x - s * 0.75f, y + s * 0.7f); path.close()
+            1 -> {
+                // #2: ION-LANCER (Continuous Beam Rail Destroyer with Front Emitter Prisms)
+                path.reset(); path.moveTo(x, y - s * 1.45f)
+                path.lineTo(x + s * 0.22f, y - s * 0.5f)
+                path.lineTo(x + s * 0.65f, y + s * 0.65f)
+                path.lineTo(x + s * 0.18f, y + s * 0.45f)
+                path.lineTo(x - s * 0.18f, y + s * 0.45f)
+                path.lineTo(x - s * 0.65f, y + s * 0.65f)
+                path.lineTo(x - s * 0.22f, y - s * 0.5f); path.close()
                 c.drawPath(path, fill)
-                c.drawRect(x - s * 0.12f, y - s * 0.2f, x + s * 0.12f, y + s * 0.25f, fill.apply { color = bg })
+                // Core emitter barrel
+                c.drawRect(x - s * 0.08f, y - s * 1.45f, x + s * 0.08f, y + s * 0.2f, fill.apply { color = bg })
+                c.drawCircle(x, y - s * 0.15f, s * 0.14f, fill.apply { color = col })
             }
-            2 -> { // Defender (heavy hexagonal plated dreadnought)
+            2 -> {
+                // #3: VALKYRIE-WING (Squadron Command + Dual Side-by-Side Drone Attachments)
+                // Main Command Hull
+                path.reset(); path.moveTo(x, y - s * 1.25f)
+                path.lineTo(x + s * 0.55f, y + s * 0.6f)
+                path.lineTo(x, y + s * 0.35f)
+                path.lineTo(x - s * 0.55f, y + s * 0.6f); path.close()
+                c.drawPath(path, fill)
+                c.drawCircle(x, y - s * 0.1f, s * 0.16f, fill.apply { color = bg })
+
+                // Drone 1 (Left side attachment)
+                val d1x = x - s * 1.15f; val d1y = y + s * 0.15f
+                drawCompanionDrone(c, d1x, d1y, s * 0.42f, t)
+                // Energy tether to main ship
+                stroke.color = inv; stroke.strokeWidth = 1.5f
+                c.drawLine(x - s * 0.2f, y, d1x, d1y, stroke)
+
+                // Drone 2 (Right side attachment)
+                val d2x = x + s * 1.15f; val d2y = y + s * 0.15f
+                drawCompanionDrone(c, d2x, d2y, s * 0.42f, t)
+                c.drawLine(x + s * 0.2f, y, d2x, d2y, stroke)
+            }
+            3 -> {
+                // #4: NOVA-BARRAGE (Heavy Armored Missile Artillery Platform)
+                path.reset(); path.moveTo(x - s * 0.25f, y - s * 1.1f)
+                path.lineTo(x + s * 0.25f, y - s * 1.1f)
+                path.lineTo(x + s * 0.85f, y + s * 0.7f)
+                path.lineTo(x + s * 0.35f, y + s * 0.55f)
+                path.lineTo(x - s * 0.35f, y + s * 0.55f)
+                path.lineTo(x - s * 0.85f, y + s * 0.7f); path.close()
+                c.drawPath(path, fill)
+                // Quad Rocket Launch Tubes
+                c.drawRect(x - s * 0.7f, y - s * 0.2f, x - s * 0.5f, y + s * 0.5f, fill.apply { color = bg })
+                c.drawRect(x - s * 0.45f, y - s * 0.35f, x - s * 0.25f, y + s * 0.4f, fill.apply { color = bg })
+                c.drawRect(x + s * 0.25f, y - s * 0.35f, x + s * 0.45f, y + s * 0.4f, fill.apply { color = bg })
+                c.drawRect(x + s * 0.5f, y - s * 0.2f, x + s * 0.7f, y + s * 0.5f, fill.apply { color = bg })
+            }
+            4 -> {
+                // #5: TEMPEST-TITAN (Electric Arc Vanguard with Dual Tesla Coils)
                 path.reset()
                 for (i in 0 until 6) {
                     val a = (i * PI / 3 - PI / 2).toFloat()
-                    val px = x + cos(a) * s * 0.85f; val py = y + sin(a) * s * 0.85f
+                    val px = x + cos(a) * s * 0.9f; val py = y + sin(a) * s * 0.9f
                     if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
                 }
                 path.close(); c.drawPath(path, fill)
-                c.drawCircle(x, y, s * 0.35f, fill.apply { color = bg })
-                c.drawCircle(x, y, s * 0.18f, fill.apply { color = col })
+                // Tesla Emitter Coils
+                c.drawCircle(x, y, s * 0.38f, fill.apply { color = bg })
+                c.drawCircle(x, y, s * 0.2f, fill.apply { color = col })
+                c.drawRect(x - s * 0.95f, y - s * 0.4f, x - s * 0.8f, y + s * 0.2f, fill)
+                c.drawRect(x + s * 0.8f, y - s * 0.4f, x + s * 0.95f, y + s * 0.2f, fill)
             }
-            3 -> { // Raider (asymmetric high-agility stealth wing)
-                path.reset(); path.moveTo(x, y - s * 1.2f)
-                path.lineTo(x + s * 0.85f, y + s * 0.4f); path.lineTo(x + s * 0.3f, y + s * 0.8f)
-                path.lineTo(x - s * 0.45f, y + s * 0.7f); path.lineTo(x - s * 0.85f, y + s * 0.2f); path.close()
-                c.drawPath(path, fill)
-                c.drawRect(x - s * 0.1f, y - s * 0.15f, x + s * 0.1f, y + s * 0.25f, fill.apply { color = bg })
-            }
-            4 -> { // Bomber (twin fuselage heavy platform)
-                c.drawRect(x - s * 0.75f, y - s * 0.8f, x - s * 0.25f, y + s * 0.8f, fill)
-                c.drawRect(x + s * 0.25f, y - s * 0.8f, x + s * 0.75f, y + s * 0.8f, fill)
-                c.drawRect(x - s * 0.35f, y - s * 0.2f, x + s * 0.35f, y + s * 0.3f, fill)
-                c.drawCircle(x, y - s * 0.4f, s * 0.25f, fill.apply { color = col })
-                c.drawCircle(x, y - s * 0.4f, s * 0.12f, fill.apply { color = bg })
-            }
-            5 -> { // Scout (sleek diamond lance)
+            5 -> {
+                // #6: CHRONO-PHANTOM (Stealth Tachyon Mirage with Dual Stealth Escorts)
                 path.reset(); path.moveTo(x, y - s * 1.4f)
-                path.lineTo(x + s * 0.5f, y); path.lineTo(x, y + s * 0.9f)
-                path.lineTo(x - s * 0.5f, y); path.close()
+                path.lineTo(x + s * 0.8f, y + s * 0.5f)
+                path.lineTo(x + s * 0.4f, y + s * 0.8f)
+                path.lineTo(x, y + s * 0.5f)
+                path.lineTo(x - s * 0.4f, y + s * 0.8f)
+                path.lineTo(x - s * 0.8f, y + s * 0.5f); path.close()
                 c.drawPath(path, fill)
-                c.drawLine(x, y - s * 1.2f, x, y + s * 0.7f, stroke.apply { color = bg })
+                c.drawRect(x - s * 0.1f, y - s * 0.4f, x + s * 0.1f, y + s * 0.2f, fill.apply { color = bg })
+
+                // Stealth Companion Drones
+                val d1x = x - s * 1.1f; val d1y = y + s * 0.2f
+                drawCompanionDrone(c, d1x, d1y, s * 0.38f, t)
+                val d2x = x + s * 1.1f; val d2y = y + s * 0.2f
+                drawCompanionDrone(c, d2x, d2y, s * 0.38f, t)
             }
-            6 -> { // Vanguard (cruciform star striker)
-                c.drawRect(x - s * 0.18f, y - s * 1.2f, x + s * 0.18f, y + s * 0.9f, fill)
-                c.drawRect(x - s * 0.85f, y - s * 0.2f, x + s * 0.85f, y + s * 0.3f, fill)
-                c.drawCircle(x, y, s * 0.25f, fill.apply { color = bg })
-                c.drawCircle(x, y, s * 0.12f, fill.apply { color = col })
-            }
-            7 -> { // Extinguisher (forked twin-nose cruiser)
-                path.reset(); path.moveTo(x - s * 0.5f, y - s * 1.1f)
-                path.lineTo(x - s * 0.2f, y - s * 0.2f); path.lineTo(x + s * 0.2f, y - s * 0.2f)
-                path.lineTo(x + s * 0.5f, y - s * 1.1f); path.lineTo(x + s * 0.65f, y + s * 0.7f)
-                path.lineTo(x - s * 0.65f, y + s * 0.7f); path.close()
+            6 -> {
+                // #7: OMEGA-DREADNOUGHT (Ultimate Flagship + Core Beam + Dual Flanking Gunships)
+                path.reset(); path.moveTo(x, y - s * 1.5f)
+                path.lineTo(x + s * 0.35f, y - s * 0.6f)
+                path.lineTo(x + s * 0.95f, y + s * 0.7f)
+                path.lineTo(x + s * 0.4f, y + s * 0.5f)
+                path.lineTo(x, y + s * 0.35f)
+                path.lineTo(x - s * 0.4f, y + s * 0.5f)
+                path.lineTo(x - s * 0.95f, y + s * 0.7f)
+                path.lineTo(x - s * 0.35f, y - s * 0.6f); path.close()
                 c.drawPath(path, fill)
-                c.drawCircle(x, y + s * 0.15f, s * 0.2f, fill.apply { color = bg })
-            }
-            8 -> { // Pursuer (triple-fin predator)
-                path.reset(); path.moveTo(x, y - s * 1.25f)
-                path.lineTo(x + s * 0.3f, y + s * 0.6f); path.lineTo(x + s * 0.85f, y + s * 0.9f)
-                path.lineTo(x, y + s * 0.4f)
-                path.lineTo(x - s * 0.85f, y + s * 0.9f); path.lineTo(x - s * 0.3f, y + s * 0.6f); path.close()
-                c.drawPath(path, fill)
-                c.drawRect(x - s * 0.1f, y - s * 0.3f, x + s * 0.1f, y + s * 0.1f, fill.apply { color = bg })
-            }
-            9 -> { // Annihilator (heavy hammerhead fortress)
-                c.drawRect(x - s * 0.85f, y - s * 1.1f, x + s * 0.85f, y - s * 0.5f, fill)
-                c.drawRect(x - s * 0.35f, y - s * 0.5f, x + s * 0.35f, y + s * 0.8f, fill)
-                c.drawCircle(x, y - s * 0.8f, s * 0.18f, fill.apply { color = bg })
-                c.drawCircle(x, y + s * 0.15f, s * 0.18f, fill.apply { color = bg })
-            }
-            10 -> { // Guardian (circular aegis with quad strakes)
-                c.drawCircle(x, y, s * 0.7f, fill)
-                c.drawCircle(x, y, s * 0.45f, fill.apply { color = bg })
-                c.drawCircle(x, y, s * 0.22f, fill.apply { color = col })
-                c.drawRect(x - s * 0.15f, y - s * 1.2f, x + s * 0.15f, y - s * 0.7f, fill.apply { color = col })
-            }
-            11 -> { // Interceptor-Elite (extended needle with dual ring boosters)
-                path.reset(); path.moveTo(x, y - s * 1.45f)
-                path.lineTo(x + s * 0.65f, y + s * 0.7f); path.lineTo(x, y + s * 0.4f)
-                path.lineTo(x - s * 0.65f, y + s * 0.7f); path.close()
-                c.drawPath(path, fill.apply { color = col })
-                c.drawCircle(x - s * 0.35f, y + s * 0.4f, s * 0.18f, fill.apply { color = bg })
-                c.drawCircle(x + s * 0.35f, y + s * 0.4f, s * 0.18f, fill.apply { color = bg })
-            }
-            12 -> { // Striker-Elite (forward swept predatory hawk)
-                path.reset(); path.moveTo(x, y - s * 0.8f)
-                path.lineTo(x + s * 0.95f, y - s * 0.3f); path.lineTo(x + s * 0.4f, y + s * 0.8f)
-                path.lineTo(x, y + s * 0.35f); path.lineTo(x - s * 0.4f, y + s * 0.8f)
-                path.lineTo(x - s * 0.95f, y - s * 0.3f); path.close()
-                c.drawPath(path, fill.apply { color = col })
-                c.drawCircle(x, y - s * 0.15f, s * 0.2f, fill.apply { color = bg })
-            }
-            13 -> { // Defender-Elite (heavy octagonal bastion)
-                path.reset()
-                for (i in 0 until 8) {
-                    val a = (i * PI / 4 - PI / 8).toFloat()
-                    val px = x + cos(a) * s * 0.85f; val py = y + sin(a) * s * 0.85f
-                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-                }
-                path.close(); c.drawPath(path, fill.apply { color = col })
-                c.drawRect(x - s * 0.25f, y - s * 0.25f, x + s * 0.25f, y + s * 0.25f, fill.apply { color = bg })
-            }
-            14 -> { // Raider-Elite (multi-tiered stealth prism)
-                path.reset(); path.moveTo(x, y - s * 1.3f)
-                path.lineTo(x + s * 0.8f, y + s * 0.8f); path.lineTo(x, y + s * 0.4f)
-                path.lineTo(x - s * 0.8f, y + s * 0.8f); path.close()
-                c.drawPath(path, fill.apply { color = col })
-                path.reset(); path.moveTo(x, y - s * 0.7f)
-                path.lineTo(x + s * 0.4f, y + s * 0.3f); path.lineTo(x, y + s * 0.1f)
-                path.lineTo(x - s * 0.4f, y + s * 0.3f); path.close()
-                c.drawPath(path, fill.apply { color = bg })
-            }
-            15 -> { // Bomber-Elite (triple sponson dread-bomber)
-                c.drawRect(x - s * 0.85f, y - s * 0.7f, x - s * 0.45f, y + s * 0.8f, fill.apply { color = col })
-                c.drawRect(x + s * 0.45f, y - s * 0.7f, x + s * 0.85f, y + s * 0.8f, fill.apply { color = col })
-                c.drawRect(x - s * 0.25f, y - s * 1.1f, x + s * 0.25f, y + s * 0.85f, fill.apply { color = col })
-                c.drawCircle(x, y - s * 0.4f, s * 0.15f, fill.apply { color = bg })
-            }
-            16 -> { // Scout-Elite (tri-ring focal explorer)
-                c.drawCircle(x, y - s * 0.5f, s * 0.35f, fill.apply { color = col })
-                c.drawCircle(x - s * 0.45f, y + s * 0.35f, s * 0.35f, fill.apply { color = col })
-                c.drawCircle(x + s * 0.45f, y + s * 0.35f, s * 0.35f, fill.apply { color = col })
-                c.drawCircle(x, y, s * 0.2f, fill.apply { color = bg })
-            }
-            17 -> { // Vanguard-Elite (segmented chevron spearhead)
-                for (k in 0..2) {
-                    val cy = y - s * 0.8f + k * s * 0.65f
-                    path.reset(); path.moveTo(x, cy - s * 0.4f)
-                    path.lineTo(x + s * 0.65f, cy + s * 0.3f); path.lineTo(x, cy + s * 0.1f)
-                    path.lineTo(x - s * 0.65f, cy + s * 0.3f); path.close()
-                    c.drawPath(path, fill.apply { color = if (k == 1) bg else col })
-                }
-            }
-            18 -> { // Extinguisher-Elite (winged caduceus medical cruiser)
-                c.drawRect(x - s * 0.18f, y - s * 1.2f, x + s * 0.18f, y + s * 0.9f, fill.apply { color = col })
-                c.drawRect(x - s * 0.7f, y - s * 0.4f, x + s * 0.7f, y - s * 0.05f, fill.apply { color = col })
-                c.drawCircle(x, y - s * 0.8f, s * 0.22f, fill.apply { color = col })
-                c.drawCircle(x, y - s * 0.8f, s * 0.1f, fill.apply { color = bg })
-            }
-            else -> { // Pursuer-Elite (cosmic stellar sovereign)
-                path.reset()
-                for (i in 0 until 5) {
-                    val a = (i * 4 * PI / 5 - PI / 2).toFloat()
-                    val px = x + cos(a) * s * 0.95f; val py = y + sin(a) * s * 0.95f
-                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-                }
-                path.close(); c.drawPath(path, fill.apply { color = col })
-                c.drawCircle(x, y, s * 0.25f, fill.apply { color = bg })
-                c.drawCircle(x, y, s * 0.1f, fill.apply { color = col })
+                // Core Disintegrator chamber
+                c.drawCircle(x, y - s * 0.2f, s * 0.28f, fill.apply { color = bg })
+                c.drawCircle(x, y - s * 0.2f, s * 0.14f, fill.apply { color = col })
+
+                // Heavy Gunship Companions flanking left and right
+                val d1x = x - s * 1.35f; val d1y = y + s * 0.1f
+                drawHeavyGunship(c, d1x, d1y, s * 0.48f, t)
+                stroke.color = col; stroke.strokeWidth = 2f
+                c.drawLine(x - s * 0.4f, y + s * 0.2f, d1x, d1y, stroke)
+
+                val d2x = x + s * 1.35f; val d2y = y + s * 0.1f
+                drawHeavyGunship(c, d2x, d2y, s * 0.48f, t)
+                c.drawLine(x + s * 0.4f, y + s * 0.2f, d2x, d2y, stroke)
             }
         }
+    }
+
+    private fun drawCompanionDrone(c: Canvas, dx: Float, dy: Float, ds: Float, t: Long) {
+        val f = if ((t / 90) % 2L == 0L) 1f else 0.6f
+        fill.color = WHITE
+        // Drone engine plume
+        c.drawRect(dx - ds * 0.2f, dy + ds * 0.6f, dx + ds * 0.2f, dy + ds * 0.6f + ds * 0.6f * f, fill)
+        // Drone body
+        path.reset(); path.moveTo(dx, dy - ds * 1.2f)
+        path.lineTo(dx + ds * 0.8f, dy + ds * 0.6f)
+        path.lineTo(dx, dy + ds * 0.3f)
+        path.lineTo(dx - ds * 0.8f, dy + ds * 0.6f); path.close()
+        c.drawPath(path, fill)
+        c.drawCircle(dx, dy, ds * 0.25f, fill.apply { color = BLACK })
+    }
+
+    private fun drawHeavyGunship(c: Canvas, dx: Float, dy: Float, ds: Float, t: Long) {
+        val f = if ((t / 90) % 2L == 0L) 1f else 0.6f
+        fill.color = WHITE
+        c.drawRect(dx - ds * 0.3f, dy + ds * 0.65f, dx + ds * 0.3f, dy + ds * 0.65f + ds * 0.7f * f, fill)
+        path.reset(); path.moveTo(dx, dy - ds * 1.3f)
+        path.lineTo(dx + ds * 0.9f, dy + ds * 0.5f)
+        path.lineTo(dx + ds * 0.3f, dy + ds * 0.8f)
+        path.lineTo(dx - ds * 0.3f, dy + ds * 0.8f)
+        path.lineTo(dx - ds * 0.9f, dy + ds * 0.5f); path.close()
+        c.drawPath(path, fill)
+        c.drawRect(dx - ds * 0.15f, dy - ds * 0.3f, dx + ds * 0.15f, dy + ds * 0.2f, fill.apply { color = BLACK })
     }
 }

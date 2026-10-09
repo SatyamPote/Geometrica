@@ -198,7 +198,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                         }
                         if (y > height * 0.40f && y < height * 0.58f) {
                             // Cycle through unlocked ships for immediate play
-                            val unlockedShips = (0 until 100).filter { save.isShipUnlocked(it) }
+                            val unlockedShips = (0 until 7).filter { save.isShipUnlocked(it) }
                             if (unlockedShips.isNotEmpty()) {
                                 val curPos = unlockedShips.indexOf(save.shipIndex()).coerceAtLeast(0)
                                 val nextPos = if (x < width * 0.4f) (curPos - 1 + unlockedShips.size) % unlockedShips.size
@@ -233,13 +233,9 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                                 shopFilter = cats[(curIdx + 1) % cats.size]
                                 return true
                             }
-                            if (y > height * 0.26f && y < height * 0.35f) { // switch viewed ship
-                                val ships = if (shopFilter == "ALL") ALL_100_PLAYER_SHIPS else ALL_100_PLAYER_SHIPS.filter { it.diff.equals(shopFilter, true) }
-                                if (ships.isNotEmpty()) {
-                                    val curSub = ships.indexOfFirst { it.num == ALL_100_PLAYER_SHIPS[shopViewingIdx].num }.coerceAtLeast(0)
-                                    val nextSub = if (x < width * 0.4f) (curSub - 1 + ships.size) % ships.size else (curSub + 1) % ships.size
-                                    shopViewingIdx = ships[nextSub].num - 1
-                                }
+                            if (y > height * 0.24f && y < height * 0.35f) { // switch viewed ship
+                                val nextIdx = if (x < width * 0.4f) (shopViewingIdx - 1 + 7) % 7 else (shopViewingIdx + 1) % 7
+                                shopViewingIdx = nextIdx
                                 return true
                             }
                             if (y > height * 0.35f && y < height * 0.42f) { // BUY or EQUIP ship
@@ -714,8 +710,8 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         val nrgTotal = (curShip.energy * 25) + save.upDur(shopViewingIdx) * 10
         txt.color = WHITE
         centerText(c, "PWR: $pwrTotal  SPD: $spdTotal  NRG: $nrgTotal  HP: $hpTotal", w / 2f, h * 0.43f, 15f)
-        txt.color = GRAY
-        centerText(c, "SPECIAL SKILL: [${curShip.skill.uppercase()}]", w / 2f, h * 0.465f, 15f)
+        txt.color = 0xFF00E5FF.toInt()
+        centerText(c, curShip.weaponDesc, w / 2f, h * 0.465f, 13f)
 
         // Upgrade Buttons with Visual Progress Bars (specific to this ship!)
         fun drawUpgradeRow(title: String, cost: String, lvl: Int, maxLvl: Int, yPos: Float) {
@@ -789,7 +785,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         centerText(c, "SPACE IMPACT ARCADE", w / 2f, h * 0.37f, 18f)
         txt.color = GRAY
         centerText(c, "100 ALIEN ENEMY SHIPS", w / 2f, h * 0.46f, 18f)
-        centerText(c, "100 PLAYER STARSHIPS", w / 2f, h * 0.51f, 18f)
+        centerText(c, "7 MASTER STARSHIPS", w / 2f, h * 0.51f, 18f)
         centerText(c, "50 HANDCRAFTED SKILL BOSSES", w / 2f, h * 0.56f, 18f)
         centerText(c, "GEOMETRICA RETRO ENGINE", w / 2f, h * 0.63f, 18f)
         centerText(c, "DEVELOPED FOR ANDROID", w / 2f, h * 0.68f, 18f)
@@ -854,6 +850,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         wd.boss?.draw(c, t, wd.elapsed)
         for (m in wd.items) Art.drawItem(c, m.kind, m.x, m.y, 22f, t, txt)
         for (b in wd.shots) Art.drawShot(c, b.x, b.y, b.big)
+        for (m in wd.missiles) Art.drawMissile(c, m.x, m.y, m.vx, m.vy, t)
         for (b in wd.foeShots) Art.drawFoeShot(c, b.x, b.y, b.r)
         for (bm in wd.beams) {
             if (bm.tele > 0) {
@@ -873,6 +870,12 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
             }
         }
         val p = wd.player
+        val sIdx = save.shipIndex()
+        val ship = ALL_100_PLAYER_SHIPS[sIdx]
+        if (!p.dead && state == State.PLAY && wd.input.firing && ship.hasLaser) {
+            val effPwr = ship.power + save.upPwr(sIdx) + save.upElite(sIdx)
+            Art.drawContinuousLaser(c, p.x, p.y, effPwr, t)
+        }
         if (!p.dead && state == State.PLAY) {
             Art.drawPlayer(c, p.x, p.y, 38f, t, p.invuln > 0, save.shipIndex())
         }
@@ -1028,5 +1031,12 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         if (p.doubleT > 0) drawPowerChip("DUAL", p.doubleT, 12f)
         if (p.spreadT > 0) drawPowerChip("SPREAD", p.spreadT, 12f)
         if (p.pierceT > 0) drawPowerChip("PIERCE", p.pierceT, 10f)
+
+        val sIdx = save.shipIndex()
+        val curShip = ALL_100_PLAYER_SHIPS[sIdx]
+        if (curShip.hasMissiles && !p.dead) {
+            val maxRocketT = if (curShip.num == 4 || curShip.num == 7) 8f else 10f
+            drawPowerChip("ROCKET", p.missileTimer, maxRocketT)
+        }
     }
 }

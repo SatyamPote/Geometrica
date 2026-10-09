@@ -33,10 +33,10 @@ class Save(context: Context) {
         p.edit().putFloat("vol", v.coerceIn(0f, 1.0f)).apply()
     }
 
-    // Active equipped ship index
-    fun shipIndex(): Int = p.getInt("ship_idx", 0).coerceIn(0, 99)
+    // Active equipped ship index (0..6 for the 7 master starships)
+    fun shipIndex(): Int = p.getInt("ship_idx", 0).coerceIn(0, 6)
     fun setShipIndex(idx: Int) {
-        p.edit().putInt("ship_idx", idx.coerceIn(0, 99)).apply()
+        p.edit().putInt("ship_idx", idx.coerceIn(0, 6)).apply()
     }
 
     // Ship unlock system: ship 0 (Interceptor) is unlocked by default, others require coins

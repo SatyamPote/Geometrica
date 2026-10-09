@@ -97,6 +97,50 @@ object Art {
         else rect(c, x - 2.5f, y - 9f, 5f, 18f, WHITE)
     }
 
+    fun drawMissile(c: Canvas, x: Float, y: Float, vx: Float, vy: Float, t: Long) {
+        val angle = Math.toDegrees(kotlin.math.atan2(vy.toDouble(), vx.toDouble())).toFloat() + 90f
+        c.save()
+        c.translate(x, y)
+        c.rotate(angle)
+        // Missile Body
+        fill.color = WHITE
+        c.drawRect(-3.5f, -12f, 3.5f, 10f, fill)
+        // Missile Nosecone
+        path.reset()
+        path.moveTo(0f, -18f)
+        path.lineTo(3.5f, -12f)
+        path.lineTo(-3.5f, -12f)
+        path.close()
+        c.drawPath(path, fill)
+        // Missile Fins
+        c.drawRect(-7f, 4f, 7f, 10f, fill)
+        // Rocket plume
+        val f = if ((t / 50) % 2L == 0L) 1f else 0.5f
+        fill.color = if ((t / 70) % 2L == 0L) 0xFFFF1744.toInt() else 0xFFFF9100.toInt()
+        c.drawRect(-2.5f, 10f, 2.5f, 10f + 14f * f, fill)
+        c.restore()
+    }
+
+    fun drawContinuousLaser(c: Canvas, px: Float, py: Float, pwr: Int, t: Long) {
+        val w = 18f + pwr * 2.5f
+        // Outer glow
+        stroke.color = 0xFF00E5FF.toInt()
+        stroke.strokeWidth = w
+        stroke.alpha = 110 + (kotlin.math.sin(t / 40.0) * 40).toInt()
+        c.drawLine(px, py - 30f, px, 0f, stroke)
+        // Inner intense core beam
+        stroke.color = WHITE
+        stroke.strokeWidth = w * 0.45f
+        stroke.alpha = 255
+        c.drawLine(px, py - 30f, px, 0f, stroke)
+        stroke.alpha = 255
+        // Emitter flare
+        fill.color = 0xFF00E5FF.toInt()
+        c.drawCircle(px, py - 30f, w * 0.8f, fill)
+        fill.color = WHITE
+        c.drawCircle(px, py - 30f, w * 0.4f, fill)
+    }
+
     fun drawFoeShot(c: Canvas, x: Float, y: Float, r: Float) {
         // Sharp plasma spark: central diamond plus cross needles (never a square box)
         stroke.color = WHITE
