@@ -677,7 +677,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         centerText(c, "< CATEGORY: $shopFilter >", w / 2f, h * 0.14f, 17f)
 
         // Display current preview ship
-        Art.drawPlayer(c, w / 2f, h * 0.22f, 36f, t, false, shopViewingIdx)
+        Art.drawPlayer(c, w / 2f, h * 0.22f, 44f, t, false, shopViewingIdx)
         txt.color = WHITE
         centerText(c, "<  #${curShip.num}: ${curShip.name.uppercase()}  >", w / 2f, h * 0.29f, 20f)
         txt.color = GRAY
@@ -823,7 +823,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         txt.color = if (isUnlocked) WHITE else GRAY
         val lockTag = if (isUnlocked) "[READY]" else "[LOCKED: ${curShip.cost} C - GO TO SHOP]"
         centerText(c, "$lockTag  NRG: ${curShip.energy * 25}  SKILL: [${curShip.skill.uppercase()}]", w / 2f, h * 0.54f, 14f)
-        Art.drawPlayer(c, w / 2f, h * 0.44f, 38f, t, false, save.shipIndex())
+        Art.drawPlayer(c, w / 2f, h * 0.44f, 44f, t, false, save.shipIndex())
     }
 
     private fun drawStars(c: Canvas, w: Float, h: Float) {
@@ -874,7 +874,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         }
         val p = wd.player
         if (!p.dead && state == State.PLAY) {
-            Art.drawPlayer(c, p.x, p.y, 30f, t, p.invuln > 0, save.shipIndex())
+            Art.drawPlayer(c, p.x, p.y, 38f, t, p.invuln > 0, save.shipIndex())
         }
         for (pt in wd.parts) {
             fill.color = WHITE
@@ -993,6 +993,8 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                 lagHp = bo.lagHp,
                 curPhase = bo.phaseIdx,
                 totalPhases = bo.phases.size,
+                shieldActive = bo.isShieldActive(),
+                shieldTimeLeft = bo.shieldTimeLeft(),
                 flash = bo.flash > 0,
                 t = t,
                 txt = txt

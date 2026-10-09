@@ -52,12 +52,20 @@ class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
     private var boomT = 0f
     private var seqIdx = 0
 
+    // 10s Shield On / 10s Shield Off Cycle
+    var shieldCycleT = 0f
+    var escortSpawnT = 4f
+
+    fun isShieldActive(): Boolean = entered && !dying && ((shieldCycleT % 20f) < 10f)
+    fun shieldTimeLeft(): Float = if (isShieldActive()) (10f - (shieldCycleT % 20f)) else (20f - (shieldCycleT % 20f))
+
     fun phase(): Phase = phases[phaseIdx.coerceIn(0, phases.size - 1)]
 
     fun weakMul(t: Float): Float = if (t < weakUntil) 2f else 1f
 
     fun vulnerable(): Boolean {
         if (dying || gone || !entered) return false
+        if (isShieldActive()) return false
         return try {
             phase().vuln(this) || mercy
         } catch (_: Exception) {
@@ -221,6 +229,12 @@ class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
             return
         }
         tPhase += dt
+        shieldCycleT += dt
+        escortSpawnT -= dt
+        if (escortSpawnT <= 0f && entered && !dying) {
+            escortSpawnT = 7f + world.rnd.nextFloat() * 3.5f
+            world.spawnBossEscorts(this)
+        }
         val phm = phase()
         if (!mercy && phm.needsParts > 0 && tPhase > 30f && parts.any { it.alive }) {
             mercy = true
@@ -267,18 +281,27 @@ class Boss(val def: BossDef, val mul: Float, val scrW: Float, val scrH: Float) {
             }
         }
         if (weakMul(gt) > 1f) Art.drawWeak(c, x, y, wPx * 0.3f, t)
-        if (!vulnerable() && entered && !dying && (t / 240) % 2L == 0L) {
+        if (isShieldActive() && entered && !dying) {
+            // Glowing cyan force-field energy barrier around boss during the 10s shielded state
+            val sPulse = sin(t * 0.008f).toFloat() * 6f
+            val rx = wPx * 0.65f + sPulse
+            val ry = hPx * 0.72f + sPulse
+            Art.stroke.color = 0xFF00E5FF.toInt()
+            Art.stroke.strokeWidth = 4f
+            c.drawOval(x - rx, y - ry, x + rx, y + ry, Art.stroke)
             Art.stroke.color = WHITE
-            Art.stroke.strokeWidth = 6f
-            val rx = wPx * 0.62f
-            val ry = hPx * 0.68f
-            for (i in 0 until 6) {
-                val a0 = i * PI / 3
-                val a1 = (i + 1) * PI / 3
-                c.drawLine(
-                    x + (cos(a0) * rx).toFloat(), y + (sin(a0) * ry).toFloat(),
-                    x + (cos(a1) * rx).toFloat(), y + (sin(a1) * ry).toFloat(), Art.stroke
-                )
+            Art.stroke.strokeWidth = 1.5f
+            c.drawOval(x - rx + 4f, y - ry + 4f, x + rx - 4f, y + ry - 4f, Art.stroke)
+
+            // Orbiting shield energy spark nodes
+            for (i in 0 until 4) {
+                val a = (t * 0.003f + i * PI.toFloat() / 2f)
+                val nx = x + cos(a) * rx
+                val ny = y + sin(a) * ry
+                Art.fill.color = 0xFF00E5FF.toInt()
+                c.drawCircle(nx, ny, 6f, Art.fill)
+                Art.fill.color = WHITE
+                c.drawCircle(nx, ny, 3f, Art.fill)
             }
         }
         c.restore()
@@ -389,7 +412,7 @@ private fun genPattern(code: Int, bb: Boss, ww: World) {
 
 
 private fun buildCustomSkillBoss(spec: BossSpecInfo, idx: Int, mul: Float, w: Float, h: Float): Boss {
-    val def = BossDef(spec.id, spec.title, 1200 + idx * 150, 0.52f, 0.22f, 3.5f, 0)
+    val def = BossDef(spec.id, spec.title, 1200 + idx * 150, 0.62f, 0.28f, 3.5f, 0)
     val b = Boss(def, mul, w, h)
     b.wPx = w * def.wFrac
     b.hPx = h * def.hFrac

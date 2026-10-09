@@ -760,6 +760,83 @@ class World(val save: Save, val sound: Sound) {
         }
     }
 
+    /** 2 to 3 types of larger elite minion escorts that only appear during boss battles */
+    fun spawnBossEscorts(boss: Boss) {
+        if (enemies.size >= 6) return // screen stays clean & readable
+        val type = rnd.nextInt(3)
+        when (type) {
+            0 -> {
+                // Type 1: Dread-Guard Tank (Heavy flanking escort duo)
+                val e1 = Enemy().apply {
+                    spec = 94
+                    ai = AI_GUN
+                    x = (boss.x - 140f).coerceIn(40f, w - 40f)
+                    y = (boss.y + 40f).coerceIn(60f, h * 0.45f)
+                    r = 38f
+                    hp = (350f + progress * 250f) * hpM
+                    maxHp = hp
+                    spd = 0.75f
+                    score = 400
+                    fire = 2.0f
+                    p1 = 2f
+                    fireT = 1.0f
+                }
+                val e2 = Enemy().apply {
+                    spec = 95
+                    ai = AI_GUN
+                    x = (boss.x + 140f).coerceIn(40f, w - 40f)
+                    y = (boss.y + 40f).coerceIn(60f, h * 0.45f)
+                    r = 38f
+                    hp = (350f + progress * 250f) * hpM
+                    maxHp = hp
+                    spd = 0.75f
+                    score = 400
+                    fire = 2.0f
+                    p1 = 2f
+                    fireT = 1.6f
+                }
+                enemies.add(e1)
+                enemies.add(e2)
+            }
+            1 -> {
+                // Type 2: Aegis Wing Interceptor (Fast agile escort weaving below boss)
+                val e = Enemy().apply {
+                    spec = 97
+                    ai = AI_WEAVE
+                    x = boss.x + (rnd.nextFloat() - 0.5f) * 160f
+                    y = (boss.y + 90f).coerceIn(60f, h * 0.45f)
+                    r = 34f
+                    hp = (260f + progress * 180f) * hpM
+                    maxHp = hp
+                    spd = 1.35f
+                    score = 350
+                    fire = 1.8f
+                    p1 = 1f
+                    fireT = 0.8f
+                }
+                enemies.add(e)
+            }
+            2 -> {
+                // Type 3: Plasma Destroyer (Heavy capital escort firing bursts)
+                val e = Enemy().apply {
+                    spec = 98
+                    ai = AI_BURST
+                    x = (boss.x + (if (rnd.nextBoolean()) -100f else 100f)).coerceIn(40f, w - 40f)
+                    y = (boss.y + 60f).coerceIn(60f, h * 0.45f)
+                    r = 44f
+                    hp = (520f + progress * 350f) * hpM
+                    maxHp = hp
+                    spd = 0.85f
+                    score = 550
+                    fire = 2.4f
+                    p1 = 3f
+                    fireT = 1.2f
+                }
+                enemies.add(e)
+            }
+        }
+    }
+
     fun spawnRock() {
         if (rocks.size > 10) return
         val r = Rock()
