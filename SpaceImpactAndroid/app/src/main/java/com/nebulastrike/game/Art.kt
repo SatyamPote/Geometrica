@@ -88,160 +88,8 @@ object Art {
     }
 
     // ---------------- enemies (face down), one silhouette per AI family ----------------
-            fun drawEnemy(c: Canvas, ai: Int, spec: Int, x: Float, y: Float, r: Float, t: Long, shieldUp: Boolean, flash: Boolean) {
+    fun drawEnemy(c: Canvas, ai: Int, spec: Int, x: Float, y: Float, r: Float, t: Long, shieldUp: Boolean, flash: Boolean) {
         AlienShipRenderer.drawAlien(c, spec, x, y, r, t, shieldUp, flash)
-        return
-    }
-    fun drawEnemyOld(c: Canvas, ai: Int, spec: Int, x: Float, y: Float, r: Float, t: Long, shieldUp: Boolean, flash: Boolean) {
-        val col = if (flash) BLACK else WHITE
-        val inv = if (flash) WHITE else BLACK
-        val bg = if (flash) WHITE else DARK
-        val idx = spec.coerceIn(0, 99)
-        val tier = idx / 25
-        val family = (idx % 25) % 8
-        val s = r * 0.95f
-
-        when (family) {
-            0 -> {
-                // V-Wing Faceted Interceptor
-                path.reset()
-                path.moveTo(x, y + s * 1.3f)
-                path.lineTo(x - s * 0.9f, y - s * 0.8f)
-                path.lineTo(x - s * 0.35f, y - s * 0.4f)
-                path.lineTo(x, y - s * 0.6f)
-                path.lineTo(x + s * 0.35f, y - s * 0.4f)
-                path.lineTo(x + s * 0.9f, y - s * 0.8f)
-                path.close()
-                fill.color = col
-                c.drawPath(path, fill)
-                // cockpit facet
-                path.reset()
-                path.moveTo(x, y + s * 0.5f)
-                path.lineTo(x - s * 0.25f, y - s * 0.3f)
-                path.lineTo(x + s * 0.25f, y - s * 0.3f)
-                path.close()
-                fill.color = inv
-                c.drawPath(path, fill)
-                if (tier >= 2) {
-                    stroke.color = col; stroke.strokeWidth = 2f
-                    c.drawLine(x - s * 0.9f, y - s * 0.8f, x - s * 1.1f, y - s * 0.2f, stroke)
-                    c.drawLine(x + s * 0.9f, y - s * 0.8f, x + s * 1.1f, y - s * 0.2f, stroke)
-                }
-            }
-            1 -> {
-                // Swept Diamond Razorback
-                path.reset()
-                path.moveTo(x, y + s * 1.2f)
-                path.lineTo(x + s * 0.75f, y)
-                path.lineTo(x, y - s * 1.1f)
-                path.lineTo(x - s * 0.75f, y)
-                path.close()
-                fill.color = bg
-                c.drawPath(path, fill)
-                stroke.color = col; stroke.strokeWidth = 2f
-                c.drawPath(path, stroke)
-                c.drawLine(x, y - s * 1.1f, x, y + s * 1.2f, stroke)
-                path.reset()
-                path.moveTo(x, y + s * 0.4f)
-                path.lineTo(x + s * 0.3f, y)
-                path.lineTo(x, y - s * 0.4f)
-                path.lineTo(x - s * 0.3f, y)
-                path.close()
-                fill.color = col
-                c.drawPath(path, fill)
-                circle(c, x, y, 3f, inv)
-            }
-            2 -> {
-                // Twin Forward Sponsons Gunship
-                rect(c, x - s * 0.45f, y - s * 0.7f, s * 0.9f, s * 1.3f, col)
-                rect(c, x - s * 0.25f, y - s * 0.4f, s * 0.5f, s * 0.7f, inv)
-                rect(c, x - s * 0.85f, y - s * 0.5f, s * 0.35f, s * 1.6f, col)
-                rect(c, x + s * 0.5f, y - s * 0.5f, s * 0.35f, s * 1.6f, col)
-                if (tier >= 1) {
-                    rect(c, x - s * 0.15f, y + s * 0.6f, s * 0.3f, s * 0.7f, col)
-                }
-            }
-            3 -> {
-                // Needle Lance Void Dart
-                path.reset()
-                path.moveTo(x, y + s * 1.5f)
-                path.lineTo(x - s * 0.4f, y - s * 0.9f)
-                path.lineTo(x, y - s * 0.6f)
-                path.lineTo(x + s * 0.4f, y - s * 0.9f)
-                path.close()
-                fill.color = col
-                c.drawPath(path, fill)
-                stroke.color = col; stroke.strokeWidth = 2f
-                c.drawLine(x - s * 0.75f, y - s * 0.2f, x + s * 0.75f, y - s * 0.2f, stroke)
-                rect(c, x - 2f, y - s * 0.3f, 4f, s * 0.7f, inv)
-            }
-            4 -> {
-                // Armored Hex-Corsair
-                path.reset()
-                for (i in 0 until 6) {
-                    val a = i * PI / 3.0
-                    val px = x + (cos(a) * s * 0.9f).toFloat()
-                    val py = y + (sin(a) * s * 0.9f).toFloat()
-                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-                }
-                path.close()
-                fill.color = bg
-                c.drawPath(path, fill)
-                stroke.color = col; stroke.strokeWidth = 2f
-                c.drawPath(path, stroke)
-                circle(c, x, y, s * 0.35f, col)
-                circle(c, x, y, 4f, inv)
-                if (tier >= 1) {
-                    c.drawLine(x - s * 0.9f, y, x - s * 1.2f, y + s * 0.5f, stroke)
-                    c.drawLine(x + s * 0.9f, y, x + s * 1.2f, y + s * 0.5f, stroke)
-                }
-            }
-            5 -> {
-                // Sacred Prism
-                path.reset()
-                path.moveTo(x, y + s * 1.1f)
-                path.lineTo(x - s * 0.85f, y - s * 0.9f)
-                path.lineTo(x + s * 0.85f, y - s * 0.9f)
-                path.close()
-                fill.color = col
-                c.drawPath(path, fill)
-                path.reset()
-                path.moveTo(x, y + s * 0.4f)
-                path.lineTo(x - s * 0.4f, y - s * 0.6f)
-                path.lineTo(x + s * 0.4f, y - s * 0.6f)
-                path.close()
-                fill.color = inv
-                c.drawPath(path, fill)
-                circle(c, x, y, 3f, col)
-            }
-            6 -> {
-                // Dual Nacelle Cruiser
-                for (k in floatArrayOf(-s * 0.45f, s * 0.45f)) {
-                    path.reset()
-                    path.moveTo(x + k, y + s * 1.2f)
-                    path.lineTo(x + k - s * 0.3f, y - s * 0.8f)
-                    path.lineTo(x + k + s * 0.3f, y - s * 0.8f)
-                    path.close()
-                    fill.color = col
-                    c.drawPath(path, fill)
-                    circle(c, x + k, y, 3f, inv)
-                }
-                rect(c, x - s * 0.3f, y - s * 0.3f, s * 0.6f, s * 0.4f, col)
-            }
-            else -> {
-                // Cruciform Dread Drone
-                rect(c, x - s * 0.8f, y - s * 0.2f, s * 1.6f, s * 0.4f, col)
-                rect(c, x - s * 0.2f, y - s * 0.9f, s * 0.4f, s * 2.0f, col)
-                circle(c, x, y, s * 0.3f, bg)
-                stroke.color = col; stroke.strokeWidth = 2f
-                c.drawCircle(x, y, s * 0.3f, stroke)
-                circle(c, x, y, 3f, col)
-            }
-        }
-
-        if (shieldUp) {
-            rect(c, x - s * 0.9f, y + s * 0.75f, s * 1.8f, s * 0.3f, col)
-        }
     }
 
     fun drawShot(c: Canvas, x: Float, y: Float, big: Boolean) {
@@ -250,9 +98,19 @@ object Art {
     }
 
     fun drawFoeShot(c: Canvas, x: Float, y: Float, r: Float) {
+        // Sharp plasma spark: central diamond plus cross needles (never a square box)
         stroke.color = WHITE
-        stroke.strokeWidth = 3f
-        c.drawRect(x - r, y - r, x + r, y + r, stroke)
+        stroke.strokeWidth = 2.5f
+        c.drawLine(x - r * 1.2f, y, x + r * 1.2f, y, stroke)
+        c.drawLine(x, y - r * 1.4f, x, y + r * 1.4f, stroke)
+        path.reset()
+        path.moveTo(x, y - r * 0.9f)
+        path.lineTo(x + r * 0.6f, y)
+        path.lineTo(x, y + r * 0.9f)
+        path.lineTo(x - r * 0.6f, y)
+        path.close()
+        fill.color = WHITE
+        c.drawPath(path, fill)
     }
 
     // ---------------- pickups ----------------

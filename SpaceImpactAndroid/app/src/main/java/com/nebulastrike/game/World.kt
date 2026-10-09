@@ -289,12 +289,16 @@ class Player {
     var x = 0f
     var y = 0f
     var hits = 15
+    var maxHits = 15
+    var energy = 100f
+    var maxEnergy = 100f
     var invuln = 0f
     var fireCd = 0f
     var rapidT = 0f
     var doubleT = 0f
     var spreadT = 0f
     var pierceT = 0f
+    var skillActive = false
     var dead = false
     var deathT = 0f
 }
@@ -450,10 +454,15 @@ class World(val save: Save, val sound: Sound) {
         warn = null; warnT = 0f; bossPending = null; shieldMsgT = 0f
         bossGap = 0f
         val p = player
-        val ship = ALL_100_PLAYER_SHIPS[save.shipIndex()]
+        val sIdx = save.shipIndex()
+        val ship = ALL_100_PLAYER_SHIPS[sIdx]
         p.x = w / 2f; p.y = h * 0.78f
-        val effectiveHp = ship.health + save.upHp() + save.upElite() * 20
-        p.hits = (effectiveHp / 5).coerceIn(6, 40)
+        val effectiveHp = ship.health + save.upHp(sIdx) + save.upElite(sIdx) * 20
+        p.maxHits = (effectiveHp / 5).coerceIn(6, 40)
+        p.hits = p.maxHits
+        val effectiveEnergy = (ship.energy * 25f) + save.upDur(sIdx) * 10f + save.upElite(sIdx) * 15f
+        p.maxEnergy = effectiveEnergy
+        p.energy = p.maxEnergy
         p.invuln = 1f; p.fireCd = 0f
         p.rapidT = 0f; p.doubleT = 0f; p.spreadT = 0f; p.pierceT = 0f
         p.dead = false; p.deathT = 0f
@@ -538,11 +547,19 @@ class World(val save: Save, val sound: Sound) {
     // ---------------- firing ----------------
     private fun firePlayer() {
         val p = player
-        val ship = ALL_100_PLAYER_SHIPS[save.shipIndex()]
-        val baseInterval = (0.16f - ship.speed * 0.012f).coerceAtLeast(0.06f)
-        val interval = if (p.rapidT > 0 || ship.skill.contains("rapid")) baseInterval * 0.75f else baseInterval
+        val sIdx = save.shipIndex()
+        val ship = ALL_100_PLAYER_SHIPS[sIdx]
+        val effectiveSpd = ship.speed + save.upSpd(sIdx) + save.upElite(sIdx)
+        val baseInterval = (0.16f - effectiveSpd * 0.012f).coerceAtLeast(0.05f)
+        val interval = if (p.rapidT > 0 || ship.skill.contains("rapid")) baseInterval * 0.7f else baseInterval
         if (p.fireCd > 0) return
         p.fireCd = interval
+
+        // Firing consumes a small amount of ship energy (1.5 units)
+        // Energy recharges automatically when not firing or between shots
+        p.energy = (p.energy - 1.5f).coerceAtLeast(0f)
+        val energyBoost = if (p.energy > p.maxEnergy * 0.25f) 1.25f else 1.0f
+
         sound.shoot()
         val sx = p.x
         val sy = p.y - 34f
@@ -553,17 +570,26 @@ class World(val save: Save, val sound: Sound) {
             b.dmg = dmg; b.big = big; b.pierce = p.pierceT > 0 || ship.skill.contains("pierce")
             shots.add(b)
         }
-        val effectivePwr = ship.power + save.upPwr() + save.upElite()
-        val dmg = 24f + effectivePwr * 6f
-        if (p.spreadT > 0) {
-            shot(sx, sy, 0f, -950f, dmg, p.pierceT > 0)
-            shot(sx, sy, -220f, -880f, dmg * 0.8f, false)
-            shot(sx, sy, 220f, -880f, dmg * 0.8f, false)
-        } else if (p.doubleT > 0) {
-            shot(sx - 12f, sy, 0f, -950f, dmg, p.pierceT > 0)
-            shot(sx + 12f, sy, 0f, -950f, dmg, p.pierceT > 0)
+        val effectivePwr = ship.power + save.upPwr(sIdx) + save.upElite(sIdx)
+        // Noticeable, punchy damage scaling: 28 base + 12 per power level * energy boost
+        val dmg = (28f + effectivePwr * 12f) * energyBoost
+
+        val hasSpread = p.spreadT > 0 || ship.skill.contains("spread") || ship.skill.contains("quad")
+        val hasDouble = p.doubleT > 0 || ship.skill.contains("dual")
+
+        if (hasSpread) {
+            shot(sx, sy, 0f, -980f, dmg, p.pierceT > 0)
+            shot(sx, sy, -240f, -920f, dmg * 0.85f, false)
+            shot(sx, sy, 240f, -920f, dmg * 0.85f, false)
+            if (ship.skill.contains("quad")) {
+                shot(sx, sy, -440f, -860f, dmg * 0.75f, false)
+                shot(sx, sy, 440f, -860f, dmg * 0.75f, false)
+            }
+        } else if (hasDouble) {
+            shot(sx - 14f, sy, 0f, -980f, dmg, p.pierceT > 0)
+            shot(sx + 14f, sy, 0f, -980f, dmg, p.pierceT > 0)
         } else {
-            shot(sx, sy, 0f, -950f, dmg, p.pierceT > 0)
+            shot(sx, sy, 0f, -980f, dmg, p.pierceT > 0)
         }
     }
 
@@ -901,15 +927,23 @@ class World(val save: Save, val sound: Sound) {
             }
             return
         }
-        val spd = 640f
-        p.x = (p.x + input.mx * spd * dt).coerceIn(30f, w - 30f)
-        p.y = (p.y + input.my * spd * dt).coerceIn(h * 0.30f, h - 46f)
+        val sIdx = save.shipIndex()
+        val ship = ALL_100_PLAYER_SHIPS[sIdx]
+        val effectiveSpd = ship.speed + save.upSpd(sIdx) + save.upElite(sIdx)
+        val moveSpd = 500f + effectiveSpd * 50f
+        p.x = (p.x + input.mx * moveSpd * dt).coerceIn(30f, w - 30f)
+        p.y = (p.y + input.my * moveSpd * dt).coerceIn(h * 0.30f, h - 46f)
         if (p.fireCd > 0) p.fireCd -= dt
         if (p.invuln > 0) p.invuln -= dt
         if (p.rapidT > 0) p.rapidT -= dt
         if (p.doubleT > 0) p.doubleT -= dt
         if (p.spreadT > 0) p.spreadT -= dt
         if (p.pierceT > 0) p.pierceT -= dt
+
+        // Energy passive recharge (faster when not actively firing)
+        val rechargeRate = if (input.firing) 8f else (18f + ship.durability * 4f)
+        p.energy = min(p.maxEnergy, p.energy + rechargeRate * dt)
+
         if (input.firing) firePlayer()
     }
 

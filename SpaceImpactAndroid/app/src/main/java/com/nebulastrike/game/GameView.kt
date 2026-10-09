@@ -18,7 +18,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     View(context), WorldListener {
 
     companion object {
-        const val BUILD_TAG = "v1.1.4"
+        const val BUILD_TAG = "v1.1.5"
     }
 
     enum class State { TITLE, PLAY, PAUSE, OVER, END, SHOP, SETTINGS, HIGHSCORE, CREDITS }
@@ -29,6 +29,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
     private val world = World(save, sound)
     private var shopFilter = "ALL"
     private var shopPage = 0
+    private var shopViewingIdx = 0
     private val density = resources.displayMetrics.density
     private fun dp(v: Float) = v * density
 
@@ -196,10 +197,14 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                             sound.click(); return true
                         }
                         if (y > height * 0.40f && y < height * 0.58f) {
-                            if (x < width * 0.4f) {
-                                save.setShipIndex((save.shipIndex() - 1 + 100) % 100)
-                            } else {
-                                save.setShipIndex((save.shipIndex() + 1) % 100)
+                            // Cycle through unlocked ships for immediate play
+                            val unlockedShips = (0 until 100).filter { save.isShipUnlocked(it) }
+                            if (unlockedShips.isNotEmpty()) {
+                                val curPos = unlockedShips.indexOf(save.shipIndex()).coerceAtLeast(0)
+                                val nextPos = if (x < width * 0.4f) (curPos - 1 + unlockedShips.size) % unlockedShips.size
+                                              else (curPos + 1) % unlockedShips.size
+                                save.setShipIndex(unlockedShips[nextPos])
+                                shopViewingIdx = unlockedShips[nextPos]
                             }
                             sound.click(); return true
                         }
@@ -217,6 +222,7 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                             if (x < width / 2f) state = State.HIGHSCORE else state = State.CREDITS
                             return true
                         }
+                        return true // Consume all other touches on Title screen to prevent accidental game starts
                     }
                     if ((state == State.SHOP || state == State.SETTINGS || state == State.HIGHSCORE || state == State.CREDITS) && e.actionMasked == MotionEvent.ACTION_DOWN) {
                         sound.click()
@@ -227,41 +233,71 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
                                 shopFilter = cats[(curIdx + 1) % cats.size]
                                 return true
                             }
-                            if (y > height * 0.28f && y < height * 0.36f) { // switch ship
+                            if (y > height * 0.26f && y < height * 0.35f) { // switch viewed ship
                                 val ships = if (shopFilter == "ALL") ALL_100_PLAYER_SHIPS else ALL_100_PLAYER_SHIPS.filter { it.diff.equals(shopFilter, true) }
                                 if (ships.isNotEmpty()) {
-                                    val curSub = ships.indexOfFirst { it.num == ALL_100_PLAYER_SHIPS[save.shipIndex()].num }.coerceAtLeast(0)
+                                    val curSub = ships.indexOfFirst { it.num == ALL_100_PLAYER_SHIPS[shopViewingIdx].num }.coerceAtLeast(0)
                                     val nextSub = if (x < width * 0.4f) (curSub - 1 + ships.size) % ships.size else (curSub + 1) % ships.size
-                                    val targetNum = ships[nextSub].num
-                                    save.setShipIndex(targetNum - 1)
+                                    shopViewingIdx = ships[nextSub].num - 1
                                 }
                                 return true
                             }
-                            if (y > height * 0.45f && y < height * 0.51f) { // 1. buy pwr upgrade
-                                if (save.coins() >= 1000 && save.upPwr() < 10) { save.addCoins(-1000); save.addUpPwr(1) }
+                            if (y > height * 0.35f && y < height * 0.42f) { // BUY or EQUIP ship
+                                val curShip = ALL_100_PLAYER_SHIPS[shopViewingIdx]
+                                if (!save.isShipUnlocked(shopViewingIdx)) {
+                                    if (save.coins() >= curShip.cost) {
+                                        save.addCoins(-curShip.cost)
+                                        save.unlockShip(shopViewingIdx)
+                                        save.setShipIndex(shopViewingIdx)
+                                        sound.win()
+                                    }
+                                } else {
+                                    save.setShipIndex(shopViewingIdx)
+                                    sound.click()
+                                }
                                 return true
                             }
-                            if (y > height * 0.51f && y < height * 0.57f) { // 2. buy spd upgrade
-                                if (save.coins() >= 1200 && save.upSpd() < 10) { save.addCoins(-1200); save.addUpSpd(1) }
-                                return true
+                            // Upgrades for currently viewed ship
+                            val targetShipIdx = shopViewingIdx
+                            if (save.isShipUnlocked(targetShipIdx)) {
+                                if (y > height * 0.49f && y < height * 0.55f) { // 1. buy pwr upgrade
+                                    if (save.coins() >= 600 && save.upPwr(targetShipIdx) < 10) {
+                                        save.addCoins(-600); save.addUpPwr(targetShipIdx, 1)
+                                    }
+                                    return true
+                                }
+                                if (y > height * 0.55f && y < height * 0.61f) { // 2. buy spd upgrade
+                                    if (save.coins() >= 750 && save.upSpd(targetShipIdx) < 10) {
+                                        save.addCoins(-750); save.addUpSpd(targetShipIdx, 1)
+                                    }
+                                    return true
+                                }
+                                if (y > height * 0.61f && y < height * 0.67f) { // 3. buy energy/dur upgrade
+                                    if (save.coins() >= 800 && save.upDur(targetShipIdx) < 10) {
+                                        save.addCoins(-800); save.addUpDur(targetShipIdx, 1)
+                                    }
+                                    return true
+                                }
+                                if (y > height * 0.67f && y < height * 0.73f) { // 4. buy hp upgrade
+                                    if (save.coins() >= 900 && save.upHp(targetShipIdx) < 200) {
+                                        save.addCoins(-900); save.addUpHp(targetShipIdx, 20)
+                                    }
+                                    return true
+                                }
+                                if (y > height * 0.73f && y < height * 0.79f) { // 5. buy skill slot
+                                    if (save.coins() >= 1200 && save.upSkillSlots(targetShipIdx) < 4) {
+                                        save.addCoins(-1200); save.unlockSkillSlot(targetShipIdx)
+                                    }
+                                    return true
+                                }
+                                if (y > height * 0.79f && y < height * 0.85f) { // 6. elite overdrive
+                                    if (save.coins() >= 2000 && save.upElite(targetShipIdx) < 10) {
+                                        save.addCoins(-2000); save.addUpElite(targetShipIdx, 1)
+                                    }
+                                    return true
+                                }
                             }
-                            if (y > height * 0.57f && y < height * 0.63f) { // 3. buy dur upgrade
-                                if (save.coins() >= 1300 && save.upDur() < 10) { save.addCoins(-1300); save.addUpDur(1) }
-                                return true
-                            }
-                            if (y > height * 0.63f && y < height * 0.69f) { // 4. buy hp upgrade
-                                if (save.coins() >= 1500 && save.upHp() < 200) { save.addCoins(-1500); save.addUpHp(20) }
-                                return true
-                            }
-                            if (y > height * 0.69f && y < height * 0.75f) { // 5. buy skill slot
-                                if (save.coins() >= 2000 && save.upSkillSlots() < 4) { save.addCoins(-2000); save.unlockSkillSlot() }
-                                return true
-                            }
-                            if (y > height * 0.75f && y < height * 0.81f) { // 6. elite all-stats
-                                if (save.coins() >= 3000 && save.upElite() < 10) { save.addCoins(-3000); save.addUpElite(1) }
-                                return true
-                            }
-                            if (y > height * 0.81f && y < height * 0.88f) { // 7. craft parts
+                            if (y > height * 0.85f && y < height * 0.91f) { // 7. craft parts
                                 if (save.shipParts() >= 5) { save.addShipPart(-5); save.addCoins(2500) }
                                 return true
                             }
@@ -478,68 +514,97 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
 
 
     private fun drawShop(c: Canvas, w: Float, h: Float, t: Long) {
-        centerText(c, "SHIP HANGAR & UPGRADE SHOP", w / 2f, h * 0.07f, 26f)
-        val curShip = ALL_100_PLAYER_SHIPS[save.shipIndex()]
+        centerText(c, "STARSHIP HANGAR & UPGRADES", w / 2f, h * 0.06f, 26f)
+        val curShip = ALL_100_PLAYER_SHIPS[shopViewingIdx]
+        val isUnlocked = save.isShipUnlocked(shopViewingIdx)
+        val isEquipped = (save.shipIndex() == shopViewingIdx)
         val coins = save.coins()
         txt.color = WHITE
-        centerText(c, "BANK: $coins COINS  |  PARTS: ${save.shipParts()}", w / 2f, h * 0.11f, 18f)
+        centerText(c, "BANK: $coins COINS  |  PARTS: ${save.shipParts()}", w / 2f, h * 0.10f, 18f)
 
         // Category filter bar
         txt.color = GRAY
-        centerText(c, "< CATEGORY: $shopFilter >", w / 2f, h * 0.15f, 17f)
+        centerText(c, "< CATEGORY: $shopFilter >", w / 2f, h * 0.14f, 17f)
 
-        // Display current ship
-        Art.drawPlayer(c, w / 2f, h * 0.23f, 38f, t, false, save.shipIndex())
+        // Display current preview ship
+        Art.drawPlayer(c, w / 2f, h * 0.22f, 36f, t, false, shopViewingIdx)
         txt.color = WHITE
-        centerText(c, "<  #${curShip.num}: ${curShip.name.uppercase()}  >", w / 2f, h * 0.30f, 20f)
+        centerText(c, "<  #${curShip.num}: ${curShip.name.uppercase()}  >", w / 2f, h * 0.29f, 20f)
         txt.color = GRAY
-        centerText(c, "TIER: ${curShip.diff}  COST: ${curShip.cost} C", w / 2f, h * 0.34f, 15f)
-        val pwrTotal = curShip.power + save.upPwr() + save.upElite()
-        val spdTotal = curShip.speed + save.upSpd() + save.upElite()
-        val durTotal = curShip.durability + save.upDur() + save.upElite()
-        val hpTotal = curShip.health + save.upHp() + save.upElite() * 20
-        centerText(c, "PWR: $pwrTotal  SPD: $spdTotal  DUR: $durTotal  HP: $hpTotal", w / 2f, h * 0.38f, 15f)
-        txt.color = WHITE
-        centerText(c, "SKILL: [${curShip.skill.uppercase()}]", w / 2f, h * 0.42f, 16f)
+        centerText(c, "TIER: ${curShip.diff}  |  BASE COST: ${curShip.cost} C", w / 2f, h * 0.33f, 15f)
 
-        // Upgrade Buttons with Visual Progress Bars
+        // Purchase / Equip Button
+        val btnY = h * 0.38f
+        val btnW = w * 0.72f
+        val btnH = 48f
+        val bx1 = (w - btnW) / 2f
+        val bx2 = bx1 + btnW
+        fill.color = DARK
+        c.drawRect(bx1, btnY - btnH / 2f, bx2, btnY + btnH / 2f, fill)
+        Art.stroke.color = WHITE; Art.stroke.strokeWidth = 3f
+        c.drawRect(bx1, btnY - btnH / 2f, bx2, btnY + btnH / 2f, Art.stroke)
+
+        if (!isUnlocked) {
+            val canAfford = coins >= curShip.cost
+            txt.color = if (canAfford) WHITE else GRAY
+            centerText(c, "[ BUY SHIP: ${curShip.cost} COINS ]", w / 2f, btnY + 7f, 17f)
+        } else if (isEquipped) {
+            txt.color = WHITE
+            centerText(c, "== EQUIPPED & READY ==", w / 2f, btnY + 7f, 17f)
+        } else {
+            txt.color = WHITE
+            centerText(c, "[ EQUIP THIS SHIP ]", w / 2f, btnY + 7f, 17f)
+        }
+
+        // Stats summary for this ship
+        val pwrTotal = curShip.power + save.upPwr(shopViewingIdx) + save.upElite(shopViewingIdx)
+        val spdTotal = curShip.speed + save.upSpd(shopViewingIdx) + save.upElite(shopViewingIdx)
+        val durTotal = curShip.durability + save.upDur(shopViewingIdx) + save.upElite(shopViewingIdx)
+        val hpTotal = curShip.health + save.upHp(shopViewingIdx) + save.upElite(shopViewingIdx) * 20
+        val nrgTotal = (curShip.energy * 25) + save.upDur(shopViewingIdx) * 10
+        txt.color = WHITE
+        centerText(c, "PWR: $pwrTotal  SPD: $spdTotal  NRG: $nrgTotal  HP: $hpTotal", w / 2f, h * 0.43f, 15f)
+        txt.color = GRAY
+        centerText(c, "SPECIAL SKILL: [${curShip.skill.uppercase()}]", w / 2f, h * 0.465f, 15f)
+
+        // Upgrade Buttons with Visual Progress Bars (specific to this ship!)
         fun drawUpgradeRow(title: String, cost: String, lvl: Int, maxLvl: Int, yPos: Float) {
             val barW = w * 0.36f
-            val bx = w * 0.58f
+            val barX = w * 0.58f
             txt.textAlign = Paint.Align.LEFT
             txt.textSize = 15f * resources.displayMetrics.scaledDensity / 2.2f
-            txt.color = WHITE
+            txt.color = if (isUnlocked) WHITE else GRAY
             c.drawText(title, w * 0.08f, yPos + 6f, txt)
 
             // Draw progress bar background & fill
             fill.color = DARK
-            c.drawRect(bx, yPos - 10f, bx + barW, yPos + 8f, fill)
-            Art.stroke.color = WHITE; Art.stroke.strokeWidth = 2f
-            c.drawRect(bx, yPos - 10f, bx + barW, yPos + 8f, Art.stroke)
+            c.drawRect(barX, yPos - 10f, barX + barW, yPos + 8f, fill)
+            Art.stroke.color = if (isUnlocked) WHITE else GRAY; Art.stroke.strokeWidth = 2f
+            c.drawRect(barX, yPos - 10f, barX + barW, yPos + 8f, Art.stroke)
             val fillW = barW * (lvl.toFloat() / maxLvl.coerceAtLeast(1)).coerceIn(0f, 1f)
-            fill.color = WHITE
-            c.drawRect(bx, yPos - 10f, bx + fillW, yPos + 8f, fill)
+            fill.color = if (isUnlocked) WHITE else GRAY
+            c.drawRect(barX, yPos - 10f, barX + fillW, yPos + 8f, fill)
 
             txt.textAlign = Paint.Align.LEFT
             txt.textSize = 12f * resources.displayMetrics.scaledDensity / 2.2f
-            txt.color = if (lvl >= maxLvl) GRAY else WHITE
-            c.drawText(if (lvl >= maxLvl) "MAX" else cost, bx + barW + 12f, yPos + 5f, txt)
+            txt.color = if (lvl >= maxLvl || !isUnlocked) GRAY else WHITE
+            c.drawText(if (lvl >= maxLvl) "MAX" else cost, barX + barW + 10f, yPos + 5f, txt)
             txt.textAlign = Paint.Align.CENTER
         }
 
-        drawUpgradeRow("1. POWER", "1000 C", save.upPwr(), 10, h * 0.48f)
-        drawUpgradeRow("2. SPEED", "1200 C", save.upSpd(), 10, h * 0.54f)
-        drawUpgradeRow("3. DURABILITY", "1300 C", save.upDur(), 10, h * 0.60f)
-        drawUpgradeRow("4. HEALTH +20", "1500 C", save.upHp() / 20, 10, h * 0.66f)
-        drawUpgradeRow("5. SKILL SLOTS", "2000 C", save.upSkillSlots() - 1, 3, h * 0.72f)
-        drawUpgradeRow("6. ELITE ALL+1", "3000 C", save.upElite(), 10, h * 0.78f)
+        drawUpgradeRow("1. POWER", "600 C", save.upPwr(shopViewingIdx), 10, h * 0.52f)
+        drawUpgradeRow("2. SPEED", "750 C", save.upSpd(shopViewingIdx), 10, h * 0.58f)
+        drawUpgradeRow("3. ENERGY/DUR", "800 C", save.upDur(shopViewingIdx), 10, h * 0.64f)
+        drawUpgradeRow("4. HULL +20", "900 C", save.upHp(shopViewingIdx) / 20, 10, h * 0.70f)
+        drawUpgradeRow("5. SKILL SLOTS", "1200 C", save.upSkillSlots(shopViewingIdx) - 1, 3, h * 0.76f)
+        drawUpgradeRow("6. ELITE OVERDRIVE", "2000 C", save.upElite(shopViewingIdx), 10, h * 0.82f)
 
         // Craft part row
         txt.color = WHITE
-        centerText(c, "[ 7. CRAFT PART REWARD (5 PARTS -> 2500 C) ]", w / 2f, h * 0.84f, 16f)
+        centerText(c, "[ 7. CRAFT PART REWARD (5 PARTS -> 2500 C) ]", w / 2f, h * 0.88f, 16f)
 
         txt.color = GRAY
-        centerText(c, "< TAP BOTTOM TO RETURN TO MENU >", w / 2f, h * 0.93f, 16f)
+        centerText(c, "< TAP BOTTOM TO RETURN TO MENU >", w / 2f, h * 0.94f, 16f)
     }
 
     private fun drawSettings(c: Canvas, w: Float, h: Float) {
@@ -600,12 +665,14 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
 
         // Hangar Ship Selector
         val curShip = ALL_100_PLAYER_SHIPS[save.shipIndex()]
+        val isUnlocked = save.isShipUnlocked(save.shipIndex())
         txt.textSize = 18f * resources.displayMetrics.scaledDensity / 2.2f
         txt.color = WHITE
         centerText(c, "<  SHIP #${curShip.num}: ${curShip.name.uppercase()}  >", w / 2f, h * 0.50f, 20f)
         txt.textSize = 14f * resources.displayMetrics.scaledDensity / 2.2f
-        txt.color = GRAY
-        centerText(c, "SKILL: [${curShip.skill.uppercase()}]  HP: ${curShip.health}  SPD: ${curShip.speed}", w / 2f, h * 0.54f, 15f)
+        txt.color = if (isUnlocked) WHITE else GRAY
+        val lockTag = if (isUnlocked) "[READY]" else "[LOCKED: ${curShip.cost} C - GO TO SHOP]"
+        centerText(c, "$lockTag  NRG: ${curShip.energy * 25}  SKILL: [${curShip.skill.uppercase()}]", w / 2f, h * 0.54f, 14f)
         Art.drawPlayer(c, w / 2f, h * 0.44f, 38f, t, false, save.shipIndex())
     }
 
@@ -687,24 +754,44 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
         txt.textSize = 14f * resources.displayMetrics.scaledDensity / 2.6f
         txt.color = WHITE
         c.drawText("${save.coins()} C", 18f, 92f, txt)
-        txt.textAlign = Paint.Align.CENTER
-        txt.textSize = 15f * resources.displayMetrics.scaledDensity / 2.6f
+        txt.textAlign = Paint.Align.RIGHT
+        txt.textSize = 14f * resources.displayMetrics.scaledDensity / 2.6f
         txt.color = GRAY
-        c.drawText("HULL", w - 200f, 24f, txt)
-        for (i in 0 until 6) {
-            val bx = w - 26f - i * 26f
-            if (i < world.player.hits) {
+        c.drawText("HULL", w - 180f, 22f, txt)
+        val p = world.player
+        val numPips = 6
+        val filledPips = ((p.hits.toFloat() / p.maxHits.coerceAtLeast(1)) * numPips).toInt().coerceIn(0, numPips)
+        for (i in 0 until numPips) {
+            val bx = w - 24f - (numPips - 1 - i) * 25f
+            if (i < filledPips) {
                 fill.color = WHITE
-                c.drawRect(bx - 9f, 32f, bx + 9f, 54f, fill)
+                c.drawRect(bx - 9f, 10f, bx + 9f, 28f, fill)
             } else {
                 Art.stroke.color = GRAY
-                Art.stroke.strokeWidth = 3f
-                c.drawRect(bx - 9f, 32f, bx + 9f, 54f, Art.stroke)
+                Art.stroke.strokeWidth = 2f
+                c.drawRect(bx - 9f, 10f, bx + 9f, 28f, Art.stroke)
             }
         }
+
+        // ENERGY BAR (Gauge underneath Hull)
+        txt.color = GRAY
+        txt.textSize = 13f * resources.displayMetrics.scaledDensity / 2.6f
+        c.drawText("NRG", w - 180f, 48f, txt)
+        val nrgBarW = 142f
+        val nrgBarX = w - 170f
+        fill.color = DARK
+        c.drawRect(nrgBarX, 36f, nrgBarX + nrgBarW, 50f, fill)
+        Art.stroke.color = WHITE
+        Art.stroke.strokeWidth = 2f
+        c.drawRect(nrgBarX, 36f, nrgBarX + nrgBarW, 50f, Art.stroke)
+        val nrgFrac = (p.energy / p.maxEnergy.coerceAtLeast(1f)).coerceIn(0f, 1f)
+        fill.color = WHITE
+        c.drawRect(nrgBarX, 36f, nrgBarX + nrgBarW * nrgFrac, 50f, fill)
+
+        txt.textAlign = Paint.Align.CENTER
         txt.textSize = 18f * resources.displayMetrics.scaledDensity / 2.6f
         txt.color = GRAY
-        c.drawText("II", w - 30f, 92f, txt)
+        c.drawText("II", w - 30f, 85f, txt)
         val bo = world.boss
         if (bo != null && bo.entered && !bo.gone) {
             val bw = w * 0.6f
@@ -720,7 +807,6 @@ class GameView(context: Context, private val save: Save, private val sound: Soun
             Art.stroke.strokeWidth = 3f
             c.drawRect((w - bw) / 2f, 38f, (w + bw) / 2f, 54f, Art.stroke)
         }
-        val p = world.player
         var px = 24f
         txt.textSize = 16f * resources.displayMetrics.scaledDensity / 2.6f
         val hh = h - 24f

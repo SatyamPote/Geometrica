@@ -2,7 +2,14 @@ package com.nebulastrike.game
 
 import android.content.Context
 
-/** Minimal persistence: best score + two toggles. Nothing else. */
+/**
+ * Persistence for VoidRun:
+ * - High score
+ * - Sound / FX toggles and volume
+ * - Coins and Parts inventory
+ * - Per-ship unlock states (Ship #0 is unlocked by default, others purchased with coins)
+ * - Per-ship upgrade levels (Power, Speed, Durability, Health, Elite)
+ */
 class Save(context: Context) {
     private val p = context.getSharedPreferences("voidrun", Context.MODE_PRIVATE)
 
@@ -26,35 +33,53 @@ class Save(context: Context) {
         p.edit().putFloat("vol", v.coerceIn(0f, 1.0f)).apply()
     }
 
+    // Active equipped ship index
     fun shipIndex(): Int = p.getInt("ship_idx", 0).coerceIn(0, 99)
     fun setShipIndex(idx: Int) {
         p.edit().putInt("ship_idx", idx.coerceIn(0, 99)).apply()
     }
 
-    fun coins(): Int = p.getInt("coins", 50000) // generous starting bank
+    // Ship unlock system: ship 0 (Interceptor) is unlocked by default, others require coins
+    fun isShipUnlocked(idx: Int): Boolean {
+        if (idx == 0) return true
+        return p.getBoolean("ship_${idx}_unlocked", false)
+    }
+
+    fun unlockShip(idx: Int) {
+        p.edit().putBoolean("ship_${idx}_unlocked", true).apply()
+    }
+
+    // Economy
+    fun coins(): Int = p.getInt("coins", 5000) // starting player bank
     fun addCoins(amount: Int) {
         p.edit().putInt("coins", (coins() + amount).coerceAtLeast(0)).apply()
     }
 
-    // Upgrades
-    fun upPwr(): Int = p.getInt("up_pwr", 0)
-    fun addUpPwr(v: Int = 1) = p.edit().putInt("up_pwr", upPwr() + v).apply()
-
-    fun upSpd(): Int = p.getInt("up_spd", 0)
-    fun addUpSpd(v: Int = 1) = p.edit().putInt("up_spd", upSpd() + v).apply()
-
-    fun upDur(): Int = p.getInt("up_dur", 0)
-    fun addUpDur(v: Int = 1) = p.edit().putInt("up_dur", upDur() + v).apply()
-
-    fun upHp(): Int = p.getInt("up_hp", 0)
-    fun addUpHp(v: Int = 20) = p.edit().putInt("up_hp", upHp() + v).apply()
-
-    fun upSkillSlots(): Int = p.getInt("up_skill", 1)
-    fun unlockSkillSlot() = p.edit().putInt("up_skill", (upSkillSlots() + 1).coerceAtMost(4)).apply()
-
-    fun upElite(): Int = p.getInt("up_elite", 0)
-    fun addUpElite(v: Int = 1) = p.edit().putInt("up_elite", upElite() + v).apply()
-
     fun shipParts(): Int = p.getInt("ship_parts", 0)
-    fun addShipPart(v: Int = 1) = p.edit().putInt("ship_parts", shipParts() + v).apply()
+    fun addShipPart(v: Int = 1) = p.edit().putInt("ship_parts", (shipParts() + v).coerceAtLeast(0)).apply()
+
+    // Per-ship Upgrades (each plane upgrades independently!)
+    fun upPwr(shipIdx: Int = shipIndex()): Int = p.getInt("ship_${shipIdx}_pwr", 0)
+    fun addUpPwr(shipIdx: Int = shipIndex(), v: Int = 1) =
+        p.edit().putInt("ship_${shipIdx}_pwr", (upPwr(shipIdx) + v).coerceAtMost(10)).apply()
+
+    fun upSpd(shipIdx: Int = shipIndex()): Int = p.getInt("ship_${shipIdx}_spd", 0)
+    fun addUpSpd(shipIdx: Int = shipIndex(), v: Int = 1) =
+        p.edit().putInt("ship_${shipIdx}_spd", (upSpd(shipIdx) + v).coerceAtMost(10)).apply()
+
+    fun upDur(shipIdx: Int = shipIndex()): Int = p.getInt("ship_${shipIdx}_dur", 0)
+    fun addUpDur(shipIdx: Int = shipIndex(), v: Int = 1) =
+        p.edit().putInt("ship_${shipIdx}_dur", (upDur(shipIdx) + v).coerceAtMost(10)).apply()
+
+    fun upHp(shipIdx: Int = shipIndex()): Int = p.getInt("ship_${shipIdx}_hp", 0)
+    fun addUpHp(shipIdx: Int = shipIndex(), v: Int = 20) =
+        p.edit().putInt("ship_${shipIdx}_hp", (upHp(shipIdx) + v).coerceAtMost(200)).apply()
+
+    fun upSkillSlots(shipIdx: Int = shipIndex()): Int = p.getInt("ship_${shipIdx}_skill", 1)
+    fun unlockSkillSlot(shipIdx: Int = shipIndex()) =
+        p.edit().putInt("ship_${shipIdx}_skill", (upSkillSlots(shipIdx) + 1).coerceAtMost(4)).apply()
+
+    fun upElite(shipIdx: Int = shipIndex()): Int = p.getInt("ship_${shipIdx}_elite", 0)
+    fun addUpElite(shipIdx: Int = shipIndex(), v: Int = 1) =
+        p.edit().putInt("ship_${shipIdx}_elite", (upElite(shipIdx) + v).coerceAtMost(10)).apply()
 }
